@@ -27,9 +27,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### App Marketing Pages
 
-- [ ] **APP-01**: Each of the 3 apps has a dedicated marketing page with hero section, feature highlights, and CTA
-- [ ] **APP-02**: Each app marketing page includes a waitlist/email capture form for early access signup
-- [ ] **APP-03**: Each app marketing page has a distinct visual identity (custom illustration or accent treatment)
+- [x] **APP-01**: Each of the 3 apps has a dedicated marketing page with hero section, feature highlights, and CTA
+- [x] **APP-02**: Each app marketing page includes a waitlist/email capture form for early access signup
+- [x] **APP-03**: Each app marketing page has a distinct visual identity (custom illustration or accent treatment)
 
 ### SEO & Performance
 
@@ -83,9 +83,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SHOW-03 | Phase 3 | Complete |
 | SHOW-04 | Phase 3 | Complete |
 | SHOW-05 | Phase 2 | Complete |
-| APP-01 | Phase 3 | Pending |
-| APP-02 | Phase 3 | Pending |
-| APP-03 | Phase 3 | Pending |
+| APP-01 | Phase 3 | Complete |
+| APP-02 | Phase 3 | Complete |
+| APP-03 | Phase 3 | Complete |
 | SEO-01 | Phase 4 | Pending |
 | SEO-02 | Phase 4 | Pending |
 | SEO-03 | Phase 3 | Complete |

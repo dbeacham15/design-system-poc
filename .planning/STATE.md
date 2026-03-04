@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 03-pages-01-PLAN.md
-last_updated: "2026-03-04T02:22:47.821Z"
+stopped_at: "Checkpoint: 03-pages-02 Task 3 awaiting visual verification"
+last_updated: "2026-03-04T02:27:39.467Z"
 last_activity: 2026-03-03 — Roadmap created, requirements mapped to 4 phases
 progress:
   total_phases: 4
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 6
-  completed_plans: 5
+  completed_plans: 6
   percent: 0
 ---
 
@@ -56,6 +56,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 02-ui-system P02 | 8min | 2 tasks | 5 files |
 | Phase 02-ui-system P02 | 8 | 3 tasks | 7 files |
 | Phase 03-pages P01 | 2min | 2 tasks | 8 files |
+| Phase 03-pages P02 | 2min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -89,6 +90,10 @@ Recent decisions affecting current work:
 - [Phase 03-pages]: Canvas z-index applied via inline style prop (not Tailwind className) — correctly layers ParticleBackground below body > * z-index: 1 rule
 - [Phase 03-pages]: MotionWrapper extends HTMLMotionProps<'div'> with ...motionProps spread — Server Component pages can use motion.div capabilities without use client
 - [Phase 03-pages]: AnimatedBentoGrid stagger delay index * 0.12s with viewport once: true — prevents re-animation on scroll-up
+- [Phase 03-pages]: resend@6.9.3 installed as production dependency for waitlist email — free tier, plan-specified provider
+- [Phase 03-pages]: useActionState (not useFormState) for React 19 Server Actions — canonical API, useFormState deprecated
+- [Phase 03-pages]: ACCENT_CLASSES map for per-app theming — Tailwind token classes (text-blockabye etc.) consistent with @theme setup
+- [Phase 03-pages]: onboarding@resend.dev as from address — Resend verified testing domain works without custom domain setup
 
 ### Pending Todos
 
@@ -102,6 +107,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-04T02:22:47.819Z
-Stopped at: Completed 03-pages-01-PLAN.md
+Last session: 2026-03-04T02:27:39.465Z
+Stopped at: Checkpoint: 03-pages-02 Task 3 awaiting visual verification
 Resume file: None

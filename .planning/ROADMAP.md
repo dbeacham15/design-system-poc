@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - Next.js 16 project scaffolded with Tailwind v4 brand tokens, dark theme wired, experiments data model defined (completed 2026-03-04)
 - [x] **Phase 2: UI System** - Shared component library built (nav, footer, cards, badges, gradient text, bento grid) (completed 2026-03-04)
-- [ ] **Phase 3: Pages** - Homepage and all 3 app marketing pages assembled with animations and waitlist forms
+- [x] **Phase 3: Pages** - Homepage and all 3 app marketing pages assembled with animations and waitlist forms (completed 2026-03-04)
 - [ ] **Phase 4: SEO & Launch** - SEO metadata, Open Graph tags, structured data, and pre-launch verification complete
 
 ## Phase Details
@@ -60,7 +60,7 @@ Plans:
   4. Each of the 3 apps has a dedicated marketing page with a hero section, feature highlights, distinct visual treatment, and a CTA
   5. Each app marketing page includes a working waitlist/email capture form that accepts a submission and shows a success state
   6. All pages render correctly across desktop, tablet, and mobile breakpoints with no layout breakage
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 Plans:
 - [ ] 03-01-PLAN.md — Homepage with cosmic particle background, hero section, and animated experiment grid
 - [ ] 03-02-PLAN.md — Experiment marketing pages with waitlist forms, feature grids, and per-app accent colors
@@ -84,5 +84,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/2 | Complete   | 2026-03-04 |
 | 2. UI System | 2/2 | Complete   | 2026-03-04 |
-| 3. Pages | 1/2 | In Progress|  |
+| 3. Pages | 2/2 | Complete   | 2026-03-04 |
 | 4. SEO & Launch | 0/TBD | Not started | - |
