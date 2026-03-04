@@ -43,7 +43,7 @@ describe("SiteHeader component", () => {
   });
 
   it("uses the SVG logo image instead of plain text", () => {
-    expect(source).toContain("jazlab-logo.svg");
+    expect(source).toContain("jazlab-logo.png");
   });
 
   it("is a pure Server Component (no use client directive)", () => {

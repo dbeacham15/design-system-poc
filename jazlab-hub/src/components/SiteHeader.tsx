@@ -16,7 +16,7 @@ export function SiteHeader() {
           className="hover:opacity-80 transition-opacity"
         >
           <img
-            src="/jazlab-logo.svg"
+            src="/jazlab-logo.png"
             alt="JazLab"
             width={150}
             height={40}

@@ -28,8 +28,8 @@ describe("Homepage (page.tsx)", () => {
     expect(source).toContain("@/components/MotionWrapper");
   });
 
-  it('contains img element with src="/jazlab-logo.svg" for hero logo', () => {
-    expect(source).toContain("/jazlab-logo.svg");
+  it('contains img element with src="/jazlab-logo.png" for hero logo', () => {
+    expect(source).toContain("/jazlab-logo.png");
   });
 
   it("contains the homepage headline value proposition text", () => {

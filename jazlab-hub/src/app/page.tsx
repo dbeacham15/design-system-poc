@@ -19,7 +19,7 @@ export default function Home() {
           >
             {/* JazLab logo */}
             <img
-              src="/jazlab-logo.svg"
+              src="/jazlab-logo.png"
               alt="JazLab"
               width={300}
               height={80}
