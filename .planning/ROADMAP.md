@@ -60,7 +60,10 @@ Plans:
   4. Each of the 3 apps has a dedicated marketing page with a hero section, feature highlights, distinct visual treatment, and a CTA
   5. Each app marketing page includes a working waitlist/email capture form that accepts a submission and shows a success state
   6. All pages render correctly across desktop, tablet, and mobile breakpoints with no layout breakage
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 03-01-PLAN.md — Homepage with cosmic particle background, hero section, and animated experiment grid
+- [ ] 03-02-PLAN.md — Experiment marketing pages with waitlist forms, feature grids, and per-app accent colors
 
 ### Phase 4: SEO & Launch
 **Goal**: Every page is discoverable by search engines, generates correct social sharing previews, and passes a pre-launch checklist before the site goes live
@@ -81,5 +84,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/2 | Complete   | 2026-03-04 |
 | 2. UI System | 2/2 | Complete   | 2026-03-04 |
-| 3. Pages | 0/TBD | Not started | - |
+| 3. Pages | 0/2 | Not started | - |
 | 4. SEO & Launch | 0/TBD | Not started | - |
