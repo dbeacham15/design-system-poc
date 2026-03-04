@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 02-ui-system-02-PLAN.md
-last_updated: "2026-03-04T02:01:40.425Z"
+stopped_at: Completed 03-pages-01-PLAN.md
+last_updated: "2026-03-04T02:22:47.821Z"
 last_activity: 2026-03-03 — Roadmap created, requirements mapped to 4 phases
 progress:
   total_phases: 4
   completed_phases: 2
-  total_plans: 4
-  completed_plans: 4
+  total_plans: 6
+  completed_plans: 5
   percent: 0
 ---
 
@@ -55,6 +55,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 02-ui-system P01 | 3 | 2 tasks | 10 files |
 | Phase 02-ui-system P02 | 8min | 2 tasks | 5 files |
 | Phase 02-ui-system P02 | 8 | 3 tasks | 7 files |
+| Phase 03-pages P01 | 2min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -84,6 +85,10 @@ Recent decisions affecting current work:
 - [Phase 02-ui-system]: BentoGrid sets featured={index===0} — BlockAbye (first experiment, beta) gets visual prominence as featured card
 - [Phase 02-ui-system]: layout.tsx body gets flex flex-col min-h-screen + main flex-1 — SiteFooter sticks to bottom on short pages
 - [Phase 02-ui-system]: JazLab SVG logo integrated into SiteHeader replacing text wordmark — visual identity upgrade, static asset, zero test impact
+- [Phase 03-pages]: motion package (motion/react import) installed at 12.34.5 — canonical install per research, backward-compatible with React 19
+- [Phase 03-pages]: Canvas z-index applied via inline style prop (not Tailwind className) — correctly layers ParticleBackground below body > * z-index: 1 rule
+- [Phase 03-pages]: MotionWrapper extends HTMLMotionProps<'div'> with ...motionProps spread — Server Component pages can use motion.div capabilities without use client
+- [Phase 03-pages]: AnimatedBentoGrid stagger delay index * 0.12s with viewport once: true — prevents re-animation on scroll-up
 
 ### Pending Todos
 
@@ -97,6 +102,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-04T01:57:27.909Z
-Stopped at: Completed 02-ui-system-02-PLAN.md
+Last session: 2026-03-04T02:22:47.819Z
+Stopped at: Completed 03-pages-01-PLAN.md
 Resume file: None

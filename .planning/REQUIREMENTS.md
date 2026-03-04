@@ -9,7 +9,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Brand & Layout
 
-- [ ] **BRAND-01**: User sees a hero section with JazLab logo, value proposition headline, and primary CTA within 3 seconds of landing
+- [x] **BRAND-01**: User sees a hero section with JazLab logo, value proposition headline, and primary CTA within 3 seconds of landing
 - [x] **BRAND-02**: User can navigate between hub and all app pages via a sticky header that persists across scroll
 - [x] **BRAND-03**: User finds app links, social links, and contact info in a consistent footer on every page
 - [x] **BRAND-04**: All pages consistently use the JazLab brand system (violet/teal palette, dark foundation, Inter typography)
@@ -19,10 +19,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Experiment Showcase
 
-- [ ] **SHOW-01**: User sees an experiment grid on the homepage with cards for all 3 apps (BlockAbye, Brickify, Sournal)
+- [x] **SHOW-01**: User sees an experiment grid on the homepage with cards for all 3 apps (BlockAbye, Brickify, Sournal)
 - [x] **SHOW-02**: Each experiment card displays title, description, status badge (Active/Beta/Coming Soon), and link to app
-- [ ] **SHOW-03**: Homepage has an animated cosmic/space particle background with floating effects matching the reference image
-- [ ] **SHOW-04**: Experiment cards and page sections animate in with scroll-triggered reveal effects
+- [x] **SHOW-03**: Homepage has an animated cosmic/space particle background with floating effects matching the reference image
+- [x] **SHOW-04**: Experiment cards and page sections animate in with scroll-triggered reveal effects
 - [x] **SHOW-05**: Experiment grid uses a bento-style layout with variable card sizes
 
 ### App Marketing Pages
@@ -35,7 +35,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [ ] **SEO-01**: Every page has unique title and description meta tags optimized for search
 - [ ] **SEO-02**: Every page has Open Graph tags generating correct social sharing previews
-- [ ] **SEO-03**: All pages are fully responsive across desktop, tablet, and mobile breakpoints
+- [x] **SEO-03**: All pages are fully responsive across desktop, tablet, and mobile breakpoints
 - [ ] **SEO-04**: App pages include Schema.org SoftwareApplication structured data for rich search results
 
 ## v2 Requirements
@@ -71,24 +71,24 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BRAND-01 | Phase 3 | Pending |
+| BRAND-01 | Phase 3 | Complete |
 | BRAND-02 | Phase 2 | Complete |
 | BRAND-03 | Phase 2 | Complete |
 | BRAND-04 | Phase 1 | Complete |
 | BRAND-05 | Phase 2 | Complete |
 | BRAND-06 | Phase 2 | Complete |
 | BRAND-07 | Phase 1 | Complete |
-| SHOW-01 | Phase 3 | Pending |
+| SHOW-01 | Phase 3 | Complete |
 | SHOW-02 | Phase 2 | Complete |
-| SHOW-03 | Phase 3 | Pending |
-| SHOW-04 | Phase 3 | Pending |
+| SHOW-03 | Phase 3 | Complete |
+| SHOW-04 | Phase 3 | Complete |
 | SHOW-05 | Phase 2 | Complete |
 | APP-01 | Phase 3 | Pending |
 | APP-02 | Phase 3 | Pending |
 | APP-03 | Phase 3 | Pending |
 | SEO-01 | Phase 4 | Pending |
 | SEO-02 | Phase 4 | Pending |
-| SEO-03 | Phase 3 | Pending |
+| SEO-03 | Phase 3 | Complete |
 | SEO-04 | Phase 4 | Pending |
 
 **Coverage:**
