@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="240" viewBox="0 0 900 240" role="img" aria-label="JazLab logo">
+  <defs>
+    <!-- Brand gradients -->
+    <linearGradient id="jlViolet" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#5B3DF5"/>
+      <stop offset="100%" stop-color="#7A5CFF"/>
+    </linearGradient>
+
+    <linearGradient id="jlTeal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#28C7B7"/>
+      <stop offset="100%" stop-color="#00D4FF"/>
+    </linearGradient>
+
+    <linearGradient id="jlFlaskLiquid" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#28C7B7"/>
+      <stop offset="60%" stop-color="#1EA8D6"/>
+      <stop offset="100%" stop-color="#5B3DF5"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ===== ICON (Dog + Flask) ===== -->
+  <g transform="translate(40,36)">
+    <!-- Dog silhouette (simple, clean) -->
+    <path
+      d="M130 152
+         C108 152 93 142 85 131
+         C78 121 77 109 79 96
+         C82 78 94 61 112 52
+         C118 49 124 46 132 45
+         C141 44 151 46 160 52
+         C169 57 175 66 175 77
+         C175 86 170 93 162 98
+         C155 102 151 106 150 111
+         C148 121 154 130 166 137
+         C176 143 182 150 182 156
+         C182 163 176 168 166 168
+         L130 168
+         C117 168 109 165 103 160
+         C96 155 92 152 88 152
+         Z"
+      fill="url(#jlViolet)"/>
+
+    <!-- Ear -->
+    <path
+      d="M140 60
+         C129 60 120 68 120 78
+         C120 90 130 98 142 96
+         C150 95 156 90 156 82
+         C156 71 150 60 140 60
+         Z"
+      fill="#4528D6"
+      opacity="0.55"/>
+
+    <!-- Flask outline -->
+    <g transform="translate(190,10)">
+      <!-- Neck -->
+      <rect x="46" y="6" width="42" height="18" rx="9" fill="#1E2430" opacity="0.0"/>
+      <path
+        d="M56 10 H78
+           C80 10 82 12 82 14
+           V56
+           C82 62 85 68 90 74
+           L115 114
+           C120 122 115 132 105 132
+           H29
+           C19 132 14 122 19 114
+           L44 74
+           C49 68 52 62 52 56
+           V14
+           C52 12 54 10 56 10
+           Z"
+        fill="none"
+        stroke="#5B3DF5"
+        stroke-width="10"
+        stroke-linejoin="round"/>
+
+      <!-- Flask glass -->
+      <path
+        d="M56 10 H78
+           C80 10 82 12 82 14
+           V56
+           C82 62 85 68 90 74
+           L110 108
+           C115 116 111 124 102 124
+           H32
+           C23 124 19 116 24 108
+           L44 74
+           C49 68 52 62 52 56
+           V14
+           C52 12 54 10 56 10
+           Z"
+        fill="rgba(255,255,255,0.03)"/>
+
+      <!-- Liquid -->
+      <path
+        d="M40 96
+           C56 88 76 92 92 98
+           C101 101 110 102 116 101
+           L110 108
+           C115 116 111 124 102 124
+           H32
+           C23 124 19 116 24 108
+           L30 98
+           C33 97 37 97 40 96
+           Z"
+        fill="url(#jlFlaskLiquid)"
+        opacity="0.95"/>
+
+      <!-- Bubbles -->
+      <circle cx="54" cy="92" r="7" fill="#EAFBFF" opacity="0.85"/>
+      <circle cx="74" cy="104" r="6" fill="#EAFBFF" opacity="0.75"/>
+      <circle cx="92" cy="92" r="5" fill="#EAFBFF" opacity="0.65"/>
+      <circle cx="66" cy="118" r="4.5" fill="#EAFBFF" opacity="0.55"/>
+    </g>
+
+    <!-- Sparkle over flask -->
+    <g transform="translate(330,8)">
+      <path d="M22 0 L28 16 L44 22 L28 28 L22 44 L16 28 L0 22 L16 16 Z" fill="#FFD36B"/>
+      <circle cx="58" cy="28" r="4.5" fill="#28C7B7"/>
+      <circle cx="70" cy="18" r="3.5" fill="#00D4FF"/>
+      <circle cx="50" cy="16" r="3.5" fill="#7A5CFF"/>
+    </g>
+  </g>
+
+  <!-- ===== WORDMARK ===== -->
+  <g transform="translate(470,72)">
+    <!-- Note: text uses system fonts; swap to your chosen font in CSS if desired -->
+    <text x="0" y="86"
+          font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif"
+          font-size="92"
+          font-weight="700"
+          letter-spacing="-1.5">
+      <tspan fill="#5B3DF5">Jaz</tspan><tspan fill="#28C7B7">Lab</tspan>
+    </text>
+  </g>
+</svg>

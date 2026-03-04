@@ -42,6 +42,10 @@ describe("SiteHeader component", () => {
     expect(source).toContain("md:flex");
   });
 
+  it("uses the SVG logo image instead of plain text", () => {
+    expect(source).toContain("jazlab-logo.svg");
+  });
+
   it("is a pure Server Component (no use client directive)", () => {
     expect(source).not.toContain('"use client"');
     expect(source).not.toContain("'use client'");

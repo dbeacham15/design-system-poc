@@ -13,9 +13,15 @@ export function SiteHeader() {
         {/* Logo / Lab identity */}
         <Link
           href="/"
-          className="font-display font-bold text-text-primary hover:text-violet transition-colors"
+          className="hover:opacity-80 transition-opacity"
         >
-          JazLab
+          <img
+            src="/jazlab-logo.svg"
+            alt="JazLab"
+            width={150}
+            height={40}
+            className="h-8 w-auto"
+          />
         </Link>
 
         {/* Navigation links — lab terminology enforced (BRAND-05) */}
