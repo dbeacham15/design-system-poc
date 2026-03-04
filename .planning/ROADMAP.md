@@ -29,7 +29,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Dark backgrounds display a subtle noise/grain texture providing tactile depth
   4. `lib/experiments.ts` exports a typed array with all 3 experiments (BlockAbye, Brickify, Sournal) including slugs, status, subdomain URLs, and feature lists
   5. `npm run build` completes without errors and all marketing pages render as static (`○`) not dynamic (`λ`)
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 01-01-PLAN.md — Scaffold Next.js 16 project and wire JazLab brand system (tokens, typography, noise, shadcn bridge)
+- [ ] 01-02-PLAN.md — Experiments data model, [slug] route, Vitest test suite, build verification
 
 ### Phase 2: UI System
 **Goal**: Every reusable UI component exists, enforces the brand system, and is validated in isolation before any page is assembled
@@ -73,7 +76,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/TBD | Not started | - |
+| 1. Foundation | 0/2 | Planning complete | - |
 | 2. UI System | 0/TBD | Not started | - |
 | 3. Pages | 0/TBD | Not started | - |
 | 4. SEO & Launch | 0/TBD | Not started | - |
