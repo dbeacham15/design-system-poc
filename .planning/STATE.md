@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Phase 1 context gathered
-last_updated: "2026-03-04T00:36:50.531Z"
+stopped_at: Completed 01-foundation-01-PLAN.md
+last_updated: "2026-03-04T01:07:57.113Z"
 last_activity: 2026-03-03 — Roadmap created, requirements mapped to 4 phases
 progress:
   total_phases: 4
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 2
+  completed_plans: 1
   percent: 0
 ---
 
@@ -50,6 +50,7 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: —
 
 *Updated after each plan completion*
+| Phase 01-foundation P01 | 4 | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -63,6 +64,9 @@ Recent decisions affecting current work:
 - [Init]: Single dynamic route `app/experiments/[slug]/page.tsx` for all 3 app pages (data-driven, not hand-crafted)
 - [Init]: Domain not yet decided — use `NEXT_PUBLIC_SITE_URL` env var as placeholder in `metadataBase`
 - [Init]: Email service for waitlist not yet selected — evaluate Resend vs. Loops vs. Mailchimp in Phase 3
+- [Phase 01-foundation]: Hardcoded class=dark on html (no next-themes) — dark-only site, prevents FOUC
+- [Phase 01-foundation]: body background-color as raw CSS rule (not utility) — prevents white flash on dark bg
+- [Phase 01-foundation]: Tailwind @theme for brand tokens + @theme inline for shadcn bridge — correct v4 pattern
 
 ### Pending Todos
 
@@ -76,6 +80,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-04T00:36:50.529Z
-Stopped at: Phase 1 context gathered
-Resume file: .planning/phases/01-foundation/01-CONTEXT.md
+Last session: 2026-03-04T01:07:57.111Z
+Stopped at: Completed 01-foundation-01-PLAN.md
+Resume file: None

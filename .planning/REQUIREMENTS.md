@@ -12,10 +12,10 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **BRAND-01**: User sees a hero section with JazLab logo, value proposition headline, and primary CTA within 3 seconds of landing
 - [ ] **BRAND-02**: User can navigate between hub and all app pages via a sticky header that persists across scroll
 - [ ] **BRAND-03**: User finds app links, social links, and contact info in a consistent footer on every page
-- [ ] **BRAND-04**: All pages consistently use the JazLab brand system (violet/teal palette, dark foundation, Inter typography)
+- [x] **BRAND-04**: All pages consistently use the JazLab brand system (violet/teal palette, dark foundation, Inter typography)
 - [ ] **BRAND-05**: Lab/experiment terminology is used throughout ("experiments," "running," "active") reinforcing the lab identity
 - [ ] **BRAND-06**: Key headings use gradient text treatment (violet-to-teal) as a signature visual element
-- [ ] **BRAND-07**: Dark backgrounds include subtle noise/grain texture for tactile depth
+- [x] **BRAND-07**: Dark backgrounds include subtle noise/grain texture for tactile depth
 
 ### Experiment Showcase
 
@@ -74,10 +74,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | BRAND-01 | Phase 3 | Pending |
 | BRAND-02 | Phase 2 | Pending |
 | BRAND-03 | Phase 2 | Pending |
-| BRAND-04 | Phase 1 | Pending |
+| BRAND-04 | Phase 1 | Complete |
 | BRAND-05 | Phase 2 | Pending |
 | BRAND-06 | Phase 2 | Pending |
-| BRAND-07 | Phase 1 | Pending |
+| BRAND-07 | Phase 1 | Complete |
 | SHOW-01 | Phase 3 | Pending |
 | SHOW-02 | Phase 2 | Pending |
 | SHOW-03 | Phase 3 | Pending |
