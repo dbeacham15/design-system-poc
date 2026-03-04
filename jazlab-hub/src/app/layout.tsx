@@ -1,7 +1,6 @@
 import { Inter, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import type { Metadata } from "next";
-import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 
 const inter = Inter({
@@ -44,7 +43,6 @@ export default function RootLayout({
       className={`dark ${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`}
     >
       <body className="font-body bg-surface text-text-primary antialiased flex flex-col min-h-screen">
-        <SiteHeader />
         <main className="flex-1">
           {children}
         </main>
