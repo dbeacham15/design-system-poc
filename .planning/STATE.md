@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 02-ui-system-01-PLAN.md
-last_updated: "2026-03-04T01:39:08.039Z"
+stopped_at: "Completed 02-ui-system-02-PLAN.md (awaiting checkpoint:human-verify)"
+last_updated: "2026-03-04T01:43:26.322Z"
 last_activity: 2026-03-03 — Roadmap created, requirements mapped to 4 phases
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 4
-  completed_plans: 3
+  completed_plans: 4
   percent: 0
 ---
 
@@ -53,6 +53,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01-foundation P01 | 4 | 2 tasks | 9 files |
 | Phase 01-foundation P02 | 2 | 2 tasks | 9 files |
 | Phase 02-ui-system P01 | 3 | 2 tasks | 10 files |
+| Phase 02-ui-system P02 | 8min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -75,6 +76,9 @@ Recent decisions affecting current work:
 - [Phase 02-ui-system]: SiteHeader as pure Server Component — use client deferred to Phase 3 as thin ActiveLink leaf
 - [Phase 02-ui-system]: STATUS_CONFIG Record in ExperimentBadge is single source of truth for experiment status terminology
 - [Phase 02-ui-system]: File-read tests validate full source string including comments — avoid anti-pattern strings in comments
+- [Phase 02-ui-system]: Featured card uses md:col-span-1 lg:col-span-2 (Pitfall 3 fix) — prevents overflow on tablet 2-column grid
+- [Phase 02-ui-system]: BentoGrid sets featured={index===0} — BlockAbye (first experiment, beta) gets visual prominence as featured card
+- [Phase 02-ui-system]: layout.tsx body gets flex flex-col min-h-screen + main flex-1 — SiteFooter sticks to bottom on short pages
 
 ### Pending Todos
 
@@ -88,6 +92,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-04T01:39:08.037Z
-Stopped at: Completed 02-ui-system-01-PLAN.md
+Last session: 2026-03-04T01:43:26.320Z
+Stopped at: Completed 02-ui-system-02-PLAN.md (awaiting checkpoint:human-verify)
 Resume file: None

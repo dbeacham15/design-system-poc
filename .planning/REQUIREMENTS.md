@@ -20,10 +20,10 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Experiment Showcase
 
 - [ ] **SHOW-01**: User sees an experiment grid on the homepage with cards for all 3 apps (BlockAbye, Brickify, Sournal)
-- [ ] **SHOW-02**: Each experiment card displays title, description, status badge (Active/Beta/Coming Soon), and link to app
+- [x] **SHOW-02**: Each experiment card displays title, description, status badge (Active/Beta/Coming Soon), and link to app
 - [ ] **SHOW-03**: Homepage has an animated cosmic/space particle background with floating effects matching the reference image
 - [ ] **SHOW-04**: Experiment cards and page sections animate in with scroll-triggered reveal effects
-- [ ] **SHOW-05**: Experiment grid uses a bento-style layout with variable card sizes
+- [x] **SHOW-05**: Experiment grid uses a bento-style layout with variable card sizes
 
 ### App Marketing Pages
 
@@ -79,10 +79,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | BRAND-06 | Phase 2 | Complete |
 | BRAND-07 | Phase 1 | Complete |
 | SHOW-01 | Phase 3 | Pending |
-| SHOW-02 | Phase 2 | Pending |
+| SHOW-02 | Phase 2 | Complete |
 | SHOW-03 | Phase 3 | Pending |
 | SHOW-04 | Phase 3 | Pending |
-| SHOW-05 | Phase 2 | Pending |
+| SHOW-05 | Phase 2 | Complete |
 | APP-01 | Phase 3 | Pending |
 | APP-02 | Phase 3 | Pending |
 | APP-03 | Phase 3 | Pending |
