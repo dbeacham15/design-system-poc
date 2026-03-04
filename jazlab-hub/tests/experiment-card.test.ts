@@ -42,8 +42,8 @@ describe("ExperimentCard component", () => {
     expect(source).toContain("hover:border-violet/40");
   });
 
-  it("includes lg:col-span-2 for featured card spanning on desktop", () => {
-    expect(source).toContain("lg:col-span-2");
+  it("includes a preview area with accent color gradient", () => {
+    expect(source).toContain("experiment.accentColor");
   });
 
   it("is a pure Server Component (no use client directive)", () => {
