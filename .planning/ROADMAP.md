@@ -12,7 +12,7 @@ JazLab is built in four phases that follow a strict dependency chain: scaffold t
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation** - Next.js 16 project scaffolded with Tailwind v4 brand tokens, dark theme wired, experiments data model defined
+- [x] **Phase 1: Foundation** - Next.js 16 project scaffolded with Tailwind v4 brand tokens, dark theme wired, experiments data model defined (completed 2026-03-04)
 - [ ] **Phase 2: UI System** - Shared component library built (nav, footer, cards, badges, gradient text, bento grid)
 - [ ] **Phase 3: Pages** - Homepage and all 3 app marketing pages assembled with animations and waitlist forms
 - [ ] **Phase 4: SEO & Launch** - SEO metadata, Open Graph tags, structured data, and pre-launch verification complete
@@ -29,7 +29,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Dark backgrounds display a subtle noise/grain texture providing tactile depth
   4. `lib/experiments.ts` exports a typed array with all 3 experiments (BlockAbye, Brickify, Sournal) including slugs, status, subdomain URLs, and feature lists
   5. `npm run build` completes without errors and all marketing pages render as static (`○`) not dynamic (`λ`)
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 Plans:
 - [ ] 01-01-PLAN.md — Scaffold Next.js 16 project and wire JazLab brand system (tokens, typography, noise, shadcn bridge)
 - [ ] 01-02-PLAN.md — Experiments data model, [slug] route, Vitest test suite, build verification
@@ -76,7 +76,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/2 | Planning complete | - |
+| 1. Foundation | 2/2 | Complete   | 2026-03-04 |
 | 2. UI System | 0/TBD | Not started | - |
 | 3. Pages | 0/TBD | Not started | - |
 | 4. SEO & Launch | 0/TBD | Not started | - |
