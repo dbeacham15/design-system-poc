@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 01-foundation-02-PLAN.md
-last_updated: "2026-03-04T01:16:07.123Z"
+stopped_at: Completed 02-ui-system-01-PLAN.md
+last_updated: "2026-03-04T01:39:08.039Z"
 last_activity: 2026-03-03 — Roadmap created, requirements mapped to 4 phases
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
+  total_plans: 4
+  completed_plans: 3
   percent: 0
 ---
 
@@ -52,6 +52,7 @@ Progress: [░░░░░░░░░░] 0%
 *Updated after each plan completion*
 | Phase 01-foundation P01 | 4 | 2 tasks | 9 files |
 | Phase 01-foundation P02 | 2 | 2 tasks | 9 files |
+| Phase 02-ui-system P01 | 3 | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -71,6 +72,9 @@ Recent decisions affecting current work:
 - [Phase 01-foundation]: Experiments data stored as a plain typed constant array (not fetched) — zero dynamic APIs keeps all routes static
 - [Phase 01-foundation]: Tests read CSS/TSX files as strings (not DOM tests) — structural validation automated, visual correctness verified manually
 - [Phase 01-foundation]: Vitest path alias (@/*) configured to match tsconfig — enables direct @/lib/experiments imports in test files
+- [Phase 02-ui-system]: SiteHeader as pure Server Component — use client deferred to Phase 3 as thin ActiveLink leaf
+- [Phase 02-ui-system]: STATUS_CONFIG Record in ExperimentBadge is single source of truth for experiment status terminology
+- [Phase 02-ui-system]: File-read tests validate full source string including comments — avoid anti-pattern strings in comments
 
 ### Pending Todos
 
@@ -84,6 +88,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-04T01:12:41.031Z
-Stopped at: Completed 01-foundation-02-PLAN.md
+Last session: 2026-03-04T01:39:08.037Z
+Stopped at: Completed 02-ui-system-01-PLAN.md
 Resume file: None
