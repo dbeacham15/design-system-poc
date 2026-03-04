@@ -44,7 +44,10 @@ Plans:
   3. Experiment cards display title, description, a status badge (Active / Beta / Coming Soon), and a link to the app subdomain
   4. Key headings render with the violet-to-teal gradient text treatment as a signature visual element
   5. The experiment grid uses a bento-style layout with variable card sizes (not a uniform grid)
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 02-01-PLAN.md — Install shadcn primitives, build leaf components (GradientHeading, ExperimentBadge, SiteHeader, SiteFooter) with tests
+- [ ] 02-02-PLAN.md — Build composite components (ExperimentCard, BentoGrid), wire layout, visual verification
 
 ### Phase 3: Pages
 **Goal**: Visitors can land on the JazLab homepage, understand what the lab is, explore all three experiment cards, and navigate to a dedicated marketing page for any app
@@ -77,6 +80,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/2 | Complete   | 2026-03-04 |
-| 2. UI System | 0/TBD | Not started | - |
+| 2. UI System | 0/2 | Planning complete | - |
 | 3. Pages | 0/TBD | Not started | - |
 | 4. SEO & Launch | 0/TBD | Not started | - |
