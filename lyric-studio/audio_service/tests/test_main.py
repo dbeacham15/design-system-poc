@@ -22,3 +22,10 @@ def test_analyze_endpoint_returns_bpm():
 def test_analyze_endpoint_404_on_missing_file():
     response = client.post("/analyze", json={"wav_path": "/nonexistent.wav"})
     assert response.status_code == 404
+
+def test_features_endpoint():
+    response = client.post("/features", json={
+        "wav_path": str(FIXTURE), "start_ms": 0, "end_ms": 4000,
+    })
+    assert response.status_code == 200
+    assert "rms_mean" in response.json()
