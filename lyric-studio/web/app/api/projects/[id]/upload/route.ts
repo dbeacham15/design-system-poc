@@ -6,8 +6,6 @@ import { getProject, updateProjectAnalysis, updateProjectStatus } from "@/lib/pr
 import { ensureProjectDir, transcodeTo48kWav } from "@/lib/storage";
 import { analyzeAudio } from "@/lib/audio-service";
 
-export const config = { api: { bodyParser: false } };
-
 export async function POST(req: Request, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
   const project = getProject(getDb(), id);
