@@ -14,12 +14,20 @@ import {
 import { LineCard, type Line } from "@/components/line-card";
 import { syllableBudget } from "@/lib/syllable-budget";
 
+const SECTION_NAME_SUGGESTIONS = [
+  "Intro", "Verse 1", "Verse 2", "Verse 3",
+  "Pre-Chorus", "Chorus", "Post-Chorus",
+  "Bridge", "Drop", "Breakdown", "Outro",
+];
+
 interface Props {
   projectId: string;
   section: Section;
   genre: string;
   activeLineIdx?: number | null;
   onPlayLineBars?: (line: Line) => void;
+  onRename?: (name: string) => void;
+  onDelete?: () => void;
 }
 
 function parseLines(json: string | null | undefined): Line[] {
@@ -39,8 +47,9 @@ function parseLines(json: string | null | undefined): Line[] {
   }
 }
 
-export function SectionCard({ projectId, section, genre, activeLineIdx = null, onPlayLineBars }: Props) {
+export function SectionCard({ projectId, section, genre, activeLineIdx = null, onPlayLineBars, onRename, onDelete }: Props) {
   const [lines, setLines] = useState<Line[]>(() => parseLines(section.lines_json));
+  const [name, setName] = useState(section.name);
   const [notesOpen, setNotesOpen] = useState(false);
   const [notes, setNotes] = useState<string>(section.notes ?? "");
   const [generating, setGenerating] = useState(false);
@@ -164,9 +173,23 @@ export function SectionCard({ projectId, section, genre, activeLineIdx = null, o
 
   return (
     <section className="rounded-lg border p-4 space-y-3">
+      <datalist id={`section-names-${section.id}`}>
+        {SECTION_NAME_SUGGESTIONS.map((s) => <option key={s} value={s} />)}
+      </datalist>
       <div className="flex items-center justify-between gap-2">
-        <div>
-          <h2 className="text-lg font-semibold">{section.name}</h2>
+        <div className="flex-1 min-w-0">
+          <input
+            type="text"
+            list={`section-names-${section.id}`}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onBlur={() => {
+              const trimmed = name.trim() || section.name;
+              setName(trimmed);
+              if (trimmed !== section.name) onRename?.(trimmed);
+            }}
+            className="text-lg font-semibold bg-transparent border-b border-transparent hover:border-border focus:border-primary focus:outline-none w-full"
+          />
           <p className="text-xs text-muted-foreground">
             bars {section.bar_start}–{section.bar_end} · {linesPerPhrase} bars/line
           </p>
@@ -188,6 +211,17 @@ export function SectionCard({ projectId, section, genre, activeLineIdx = null, o
           >
             {generating ? "Generating…" : notes ? "Regenerate notes" : "Generate notes"}
           </Button>
+          {onDelete && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-muted-foreground hover:text-destructive"
+              onClick={onDelete}
+              title="Delete section"
+            >
+              ✕
+            </Button>
+          )}
         </div>
       </div>
 

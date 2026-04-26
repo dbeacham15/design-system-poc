@@ -139,6 +139,20 @@ export function ProjectEditor({
     };
   }, []);
 
+  async function handleSectionDelete(sectionId: string) {
+    const r = await fetch(`/api/projects/${project.id}/sections/${sectionId}`, { method: "DELETE" });
+    if (r.ok) setSections((prev) => prev.filter((s) => s.id !== sectionId));
+  }
+
+  async function handleSectionRename(sectionId: string, name: string) {
+    await fetch(`/api/projects/${project.id}/sections/${sectionId}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ name }),
+    });
+    setSections((prev) => prev.map((s) => s.id === sectionId ? { ...s, name } : s));
+  }
+
   async function handleRegionCreated(startSec: number, endSec: number) {
     if (!project.bpm || !project.time_sig) return;
     const startMs = snapMsToBar(startSec * 1000, project.downbeat_offset_ms ?? 0, project.bpm, project.time_sig);
@@ -285,6 +299,8 @@ export function ProjectEditor({
                   genre={project.genre}
                   activeLineIdx={activeIdx}
                   onPlayLineBars={handlePlayLineBars}
+                  onRename={(name) => handleSectionRename(s.id, name)}
+                  onDelete={() => handleSectionDelete(s.id)}
                 />
               );
             })}
