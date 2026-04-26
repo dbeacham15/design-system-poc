@@ -43,6 +43,7 @@ export function SectionCard({ projectId, section, genre, activeLineIdx = null, o
   const [lines, setLines] = useState<Line[]>(() => parseLines(section.lines_json));
   const [notesOpen, setNotesOpen] = useState(false);
   const [notes, setNotes] = useState<string>(section.notes ?? "");
+  const [generating, setGenerating] = useState(false);
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteText, setPasteText] = useState("");
   const linesPerPhrase = section.lines_per_phrase || 2;
@@ -132,6 +133,26 @@ export function SectionCard({ projectId, section, genre, activeLineIdx = null, o
     setPasteText("");
   }
 
+  async function generateNotes() {
+    setGenerating(true);
+    try {
+      const res = await fetch("/api/ai/section-notes", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ section_id: section.id }),
+      });
+      const data = await res.json();
+      if (res.ok && data.notes) {
+        setNotes(data.notes);
+        setNotesOpen(true);
+      }
+    } catch {
+      // silently ignore — user can retry
+    } finally {
+      setGenerating(false);
+    }
+  }
+
   function saveNotes() {
     if ((section.notes ?? "") === notes) return;
     fetch(`/api/projects/${projectId}/sections/${section.id}`, {
@@ -159,7 +180,14 @@ export function SectionCard({ projectId, section, genre, activeLineIdx = null, o
           >
             {notesOpen ? "Hide notes" : "Notes"}
           </Button>
-          {/* TODO: AI notes generation button — added in Task 16 */}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={generateNotes}
+            disabled={generating}
+          >
+            {generating ? "Generating…" : notes ? "Regenerate notes" : "Generate notes"}
+          </Button>
         </div>
       </div>
 
