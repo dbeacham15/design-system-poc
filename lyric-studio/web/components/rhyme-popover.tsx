@@ -27,7 +27,7 @@ export function RhymePopover({ trigger, onFetch, onPick }: Props) {
 
   return (
     <Popover onOpenChange={(open) => { if (open && !rhymes) load(); }}>
-      <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+      <PopoverTrigger render={trigger as React.ReactElement}></PopoverTrigger>
       <PopoverContent>
         {loading && <p className="text-sm">Loading...</p>}
         {error && (
