@@ -22,4 +22,17 @@ else
 fi
 
 echo
+echo "When services are running:"
+probe() {
+  local label=$1 url=$2
+  if curl -sf --max-time 2 "$url" >/dev/null 2>&1; then
+    echo "  OK  $label ($url)"
+  else
+    echo "  --  $label ($url) (not running, OK to skip if you haven't started services)"
+  fi
+}
+probe "audio_service /health" "http://127.0.0.1:8000/health"
+probe "web              "      "http://127.0.0.1:3000"
+
+echo
 if [[ $fail -eq 0 ]]; then echo "All checks passed."; else echo "Issues found."; exit 1; fi
