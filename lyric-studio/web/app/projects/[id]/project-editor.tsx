@@ -4,6 +4,7 @@ import type { Project } from "@/lib/projects";
 import type { Section } from "@/lib/sections";
 import { Waveform, type EnergyRegion } from "@/components/waveform";
 import { TimeSigBanner } from "@/components/time-sig-banner";
+import { SectionCard } from "@/components/section-card";
 import { barLengthMs, barToMs, msToBar, snapMsToBar } from "@/lib/bar-math";
 
 export function ProjectEditor({
@@ -112,6 +113,16 @@ export function ProjectEditor({
       <p className="text-xs text-muted-foreground mt-2">
         Drag on the waveform to create a section. Use ←/→ to nudge the downbeat by one beat.
       </p>
+      <div className="mt-6 space-y-4">
+        {sections.map((s) => (
+          <SectionCard
+            key={s.id}
+            projectId={project.id}
+            section={s}
+            genre={project.genre}
+          />
+        ))}
+      </div>
     </main>
   );
 }
