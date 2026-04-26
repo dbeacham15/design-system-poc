@@ -44,3 +44,42 @@ export async function extractSectionFeatures(
   if (!r.ok) throw new Error(`audio service /features failed: ${r.status}`);
   return r.json();
 }
+
+export interface ProcessRequest {
+  project_id: string;
+  take_id: string;
+  take_path: string;
+  instrumental_path: string;
+  key: string;
+  genre: string;
+  output_dir: string;
+  trim_start_ms?: number;
+  trim_end_ms?: number;
+  latency_ms?: number;
+  pitch_correction?: boolean;
+  harmony?: boolean;
+}
+
+export async function startProcessing(req: ProcessRequest): Promise<{ job_id: string }> {
+  const r = await fetch(`${AUDIO_SERVICE_URL}/process`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(req),
+  });
+  if (!r.ok) {
+    const body = await r.json().catch(() => ({}));
+    throw new Error(`audio service /process failed: ${r.status} ${body.detail ?? ""}`);
+  }
+  return r.json();
+}
+
+export async function pollJob(jobId: string): Promise<{
+  job_id: string;
+  status: "pending" | "running" | "done" | "error";
+  progress: number;
+  error: string | null;
+}> {
+  const r = await fetch(`${AUDIO_SERVICE_URL}/jobs/${jobId}`);
+  if (!r.ok) throw new Error(`audio service /jobs/${jobId} failed: ${r.status}`);
+  return r.json();
+}
