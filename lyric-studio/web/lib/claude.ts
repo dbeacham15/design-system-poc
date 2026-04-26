@@ -63,3 +63,34 @@ Zero-crossing rate: ${args.features.zero_crossing_rate.toFixed(3)}
   if (block.type !== "text") throw new Error("unexpected response type");
   return block.text;
 }
+
+export async function generateRhymes(args: {
+  end_word: string;
+  syllable_budget: number;
+  section_notes: string | null;
+  same_section_lyrics: string;
+  prev_section_lyrics: string;
+  genre: string;
+}): Promise<{ word: string; type: "perfect" | "slant" }[]> {
+  const message = await client.messages.create({
+    model: HAIKU,
+    max_tokens: 300,
+    system: "You are a rhyme assistant for a lyric writer. Return ONLY a JSON array of {word, type} where type is 'perfect' or 'slant'. 8-10 entries. Avoid clichéd words for the genre. No preamble, no markdown.",
+    messages: [{
+      role: "user",
+      content: `End word: ${args.end_word}
+Syllable budget for the line: ${args.syllable_budget}
+Genre: ${args.genre}
+Section notes: ${args.section_notes ?? "(none)"}
+Same-section lyrics so far:
+${args.same_section_lyrics || "(none)"}
+Previous section lyrics:
+${args.prev_section_lyrics || "(none)"}`,
+    }],
+  });
+  const block = message.content[0];
+  if (block.type !== "text") throw new Error("unexpected");
+  const text = block.text.trim();
+  const cleaned = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+  return JSON.parse(cleaned);
+}

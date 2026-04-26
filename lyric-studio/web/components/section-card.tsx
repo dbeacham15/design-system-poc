@@ -212,12 +212,26 @@ export function SectionCard({ projectId, section, genre, activeLineIdx = null, o
             key={idx}
             line={line}
             budget={budgets[idx] ?? 0}
+            lineIndex={idx}
+            sectionId={section.id}
             isActive={activeLineIdx === idx}
             onChange={(patch) => updateLine(idx, patch)}
             onDelete={() => deleteLine(idx)}
             onMoveUp={() => moveLine(idx, -1)}
             onMoveDown={() => moveLine(idx, 1)}
-            onRhyme={() => {}}
+            onRhyme={async ({ end_word, syllable_budget, line_index }) => {
+              const res = await fetch("/api/ai/rhyme", {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ section_id: section.id, end_word, syllable_budget, line_index }),
+              });
+              if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error ?? "rhyme request failed");
+              }
+              const data = await res.json();
+              return data.rhymes;
+            }}
             onPolish={() => {}}
             onPlayBars={() => onPlayLineBars?.(line)}
           />
