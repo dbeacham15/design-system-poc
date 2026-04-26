@@ -10,9 +10,10 @@ interface RecorderProps {
   deviceId: string;
   projectId: string;
   onTakeUploaded: (takeId: string) => void;
+  onStreamAcquired?: (stream: MediaStream | null) => void;
 }
 
-export function Recorder({ deviceId, projectId, onTakeUploaded }: RecorderProps) {
+export function Recorder({ deviceId, projectId, onTakeUploaded, onStreamAcquired }: RecorderProps) {
   const [state, setState] = useState<"idle" | "recording" | "uploading" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
   const contextRef = useRef<AudioContext | null>(null);
@@ -37,6 +38,8 @@ export function Recorder({ deviceId, projectId, onTakeUploaded }: RecorderProps)
       setState("error");
       return;
     }
+
+    onStreamAcquired?.(stream);
 
     const ctx = new AudioContext({ sampleRate: 48000 });
     contextRef.current = ctx;
@@ -69,6 +72,7 @@ export function Recorder({ deviceId, projectId, onTakeUploaded }: RecorderProps)
     if (hardCapTimerRef.current) clearTimeout(hardCapTimerRef.current);
     workletNodeRef.current?.port.postMessage("stop");
     await contextRef.current?.close();
+    onStreamAcquired?.(null);
 
     setState("uploading");
 

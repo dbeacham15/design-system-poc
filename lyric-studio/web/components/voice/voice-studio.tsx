@@ -10,6 +10,7 @@ import { TakeList } from "./take-list";
 import { PipelineProgress } from "./pipeline-progress";
 import { ABListen } from "./ab-listen";
 import { StemMixer } from "./stem-mixer";
+import { Button } from "@/components/ui/button";
 
 interface VoiceStudioProps {
   project: Project;
@@ -19,6 +20,9 @@ export function VoiceStudio({ project }: VoiceStudioProps) {
   const [deviceId, setDeviceId] = useState("");
   const [takes, setTakes] = useState<Take[]>([]);
   const [showModal, setShowModal] = useState(false);
+  const [checklistConfirmed, setChecklistConfirmed] = useState(
+    () => typeof sessionStorage !== "undefined" && sessionStorage.getItem("voice_checklist_seen") === "1"
+  );
   const [recordingStream, setRecordingStream] = useState<MediaStream | null>(null);
   const [activeJob, setActiveJob] = useState<{ jobId: string; takeId: string } | null>(null);
   const [listenTakeId, setListenTakeId] = useState<string | null>(null);
@@ -31,14 +35,9 @@ export function VoiceStudio({ project }: VoiceStudioProps) {
 
   useEffect(() => { fetchTakes(); }, [fetchTakes]);
 
-  const handleRecordClick = () => {
-    const seen = sessionStorage.getItem("voice_checklist_seen");
-    if (seen) return; // already shown
-    setShowModal(true);
-  };
-
   const handleModalConfirm = () => {
     sessionStorage.setItem("voice_checklist_seen", "1");
+    setChecklistConfirmed(true);
     setShowModal(false);
   };
 
@@ -111,13 +110,18 @@ export function VoiceStudio({ project }: VoiceStudioProps) {
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Setup</h2>
         <DevicePicker value={deviceId} onChange={setDeviceId} />
         <div className="flex items-center gap-3">
-          <div onClick={handleRecordClick}>
+          {!checklistConfirmed ? (
+            <Button onClick={() => setShowModal(true)} disabled={!deviceId}>
+              Record Take
+            </Button>
+          ) : (
             <Recorder
               deviceId={deviceId}
               projectId={project.id}
               onTakeUploaded={handleTakeUploaded}
+              onStreamAcquired={setRecordingStream}
             />
-          </div>
+          )}
           <LevelMeter stream={recordingStream} />
         </div>
       </section>

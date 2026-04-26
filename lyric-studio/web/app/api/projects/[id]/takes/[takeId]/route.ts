@@ -9,9 +9,13 @@ export async function PATCH(
   req: Request,
   ctx: { params: Promise<{ id: string; takeId: string }> }
 ) {
-  const { takeId } = await ctx.params;
+  const { id, takeId } = await ctx.params;
   const db = getDb();
-  if (!getTake(db, takeId)) {
+  const take = getTake(db, takeId);
+  if (!take) {
+    return NextResponse.json({ error: "take not found" }, { status: 404 });
+  }
+  if (take.project_id !== id) {
     return NextResponse.json({ error: "take not found" }, { status: 404 });
   }
   const body = await req.json();
@@ -20,8 +24,8 @@ export async function PATCH(
   for (const k of allowed) {
     if (k in body) updates[k] = Number(body[k]);
   }
-  const take = updateTake(db, takeId, updates as Parameters<typeof updateTake>[2]);
-  return NextResponse.json({ take });
+  const updated = updateTake(db, takeId, updates as Parameters<typeof updateTake>[2]);
+  return NextResponse.json({ take: updated });
 }
 
 export async function DELETE(
@@ -32,6 +36,9 @@ export async function DELETE(
   const db = getDb();
   const take = getTake(db, takeId);
   if (!take) return NextResponse.json({ error: "take not found" }, { status: 404 });
+  if (take.project_id !== id) {
+    return NextResponse.json({ error: "take not found" }, { status: 404 });
+  }
   deleteTake(db, takeId);
   // Remove the entire take directory (raw.wav + any stems)
   const takeDir = path.join(DATA_ROOT, "projects", id, "takes", takeId);

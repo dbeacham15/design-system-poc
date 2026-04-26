@@ -103,16 +103,16 @@ def _run_pipeline(job_id: str, req: ProcessRequest) -> None:
             import librosa
             y_raw = librosa.resample(y_raw, orig_sr=file_sr, target_sr=SR)
 
-        # Apply latency compensation (shift audio forward by latency_ms)
-        if req.latency_ms > 0:
-            delay = int(req.latency_ms * SR / 1000)
-            y_raw = np.concatenate([np.zeros(delay, dtype=np.float32), y_raw])
-
-        # Trim
+        # Trim first (user set these against raw audio before any padding)
         if req.trim_end_ms > req.trim_start_ms:
             s = int(req.trim_start_ms * SR / 1000)
             e = int(req.trim_end_ms * SR / 1000)
             y_raw = y_raw[s:e]
+
+        # Then apply latency compensation
+        if req.latency_ms > 0:
+            delay = int(req.latency_ms * SR / 1000)
+            y_raw = np.concatenate([np.zeros(delay, dtype=np.float32), y_raw])
 
         # Save lead-raw.wav
         sf.write(str(out / "lead-raw.wav"), y_raw, SR, subtype="FLOAT")

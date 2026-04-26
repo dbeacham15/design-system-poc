@@ -13,13 +13,19 @@ def apply_chain(y: np.ndarray, sr: int, genre: str, pre_delay_ms: int = 20) -> n
     comp_cfg = preset["comp"]
     rev_cfg = preset["reverb"]
 
-    # --- Dry chain: HPF → comp → EQ → saturation ---
+    # Step 1: HPF
+    hpf_board = pb.Pedalboard([pb.HighpassFilter(cutoff_frequency_hz=80.0)])
+    y_hpf = hpf_board(y.copy(), sr)
+
+    # Step 2: De-esser (pre-compressor, per design)
+    y_deessed = _deess(y_hpf, sr)
+
+    # Step 3: Compressor → EQ → Distortion
     eq_filters = [
         pb.PeakFilter(cutoff_frequency_hz=b["freq"], gain_db=b["gain"], q=1.0)
         for b in preset["eq"]
     ]
     dry_board = pb.Pedalboard([
-        pb.HighpassFilter(cutoff_frequency_hz=80.0),
         pb.Compressor(
             threshold_db=comp_cfg["threshold_db"],
             ratio=comp_cfg["ratio"],
@@ -29,8 +35,7 @@ def apply_chain(y: np.ndarray, sr: int, genre: str, pre_delay_ms: int = 20) -> n
         *eq_filters,
         pb.Distortion(drive_db=preset["distortion_drive_db"]),
     ])
-    y_dry = dry_board(y.copy(), sr)
-    y_dry = _deess(y_dry, sr)
+    y_dry = dry_board(y_deessed, sr)
 
     # --- Pre-delay then reverb ---
     delay_samples = int(pre_delay_ms * sr / 1000)

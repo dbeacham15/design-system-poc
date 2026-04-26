@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 
 const STAGE_LABELS: Record<number, string> = {
   0: "Starting…",
@@ -32,30 +32,32 @@ export function PipelineProgress({ jobId, onDone, onError }: PipelineProgressPro
   const [progress, setProgress] = useState(0);
   const [label, setLabel] = useState("Starting…");
 
-  const poll = useCallback(async () => {
-    try {
-      const r = await fetch(`/api/voice/jobs/${jobId}`);
-      if (!r.ok) return;
-      const data = await r.json();
-      setProgress(data.progress ?? 0);
-      setLabel(stageLabel(data.progress ?? 0));
-      if (data.status === "done") {
-        onDone();
-        return;
-      }
-      if (data.status === "error") {
-        onError(data.error ?? "Processing failed");
-        return;
-      }
-      setTimeout(poll, 1000);
-    } catch {
-      setTimeout(poll, 2000);
-    }
-  }, [jobId, onDone, onError]);
-
   useEffect(() => {
-    poll();
-  }, [poll]);
+    let cancelled = false;
+
+    const doPoll = async () => {
+      try {
+        const r = await fetch(`/api/voice/jobs/${jobId}`);
+        if (cancelled) return;
+        if (!r.ok) {
+          setTimeout(doPoll, 2000);
+          return;
+        }
+        const data = await r.json();
+        if (cancelled) return;
+        setProgress(data.progress ?? 0);
+        setLabel(stageLabel(data.progress ?? 0));
+        if (data.status === "done") { onDone(); return; }
+        if (data.status === "error") { onError(data.error ?? "Processing failed"); return; }
+        setTimeout(doPoll, 1000);
+      } catch {
+        if (!cancelled) setTimeout(doPoll, 2000);
+      }
+    };
+
+    doPoll();
+    return () => { cancelled = true; };
+  }, [jobId, onDone, onError]);
 
   return (
     <div className="space-y-2">
