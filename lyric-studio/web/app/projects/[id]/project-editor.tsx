@@ -1,9 +1,10 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Project } from "@/lib/projects";
 import type { Section } from "@/lib/sections";
-import { Waveform } from "@/components/waveform";
-import { barToMs, msToBar, snapMsToBar } from "@/lib/bar-math";
+import { Waveform, type EnergyRegion } from "@/components/waveform";
+import { TimeSigBanner } from "@/components/time-sig-banner";
+import { barLengthMs, barToMs, msToBar, snapMsToBar } from "@/lib/bar-math";
 
 export function ProjectEditor({
   project, initialSections,
@@ -22,6 +23,58 @@ export function ProjectEditor({
       drag: true, resize: true,
     }));
   }, [sections, project]);
+
+  const barGridLines = useMemo<number[]>(() => {
+    if (!project.bpm || !project.time_sig || !project.duration_ms) return [];
+    if (project.time_sig !== "4/4") return [];
+    const offsetMs = project.downbeat_offset_ms ?? 0;
+    const barMs = barLengthMs(project.bpm, project.time_sig);
+    if (barMs <= 0) return [];
+    const lines: number[] = [];
+    for (let t = offsetMs; t <= project.duration_ms; t += barMs) {
+      if (t < 0) continue;
+      lines.push(t / 1000);
+    }
+    return lines;
+  }, [project]);
+
+  const energyRegions = useMemo<EnergyRegion[]>(() => {
+    if (!project.energy_regions_json) return [];
+    try {
+      const parsed = JSON.parse(project.energy_regions_json) as Array<{
+        start_ms?: number; end_ms?: number; start?: number; end?: number; level: string;
+      }>;
+      return parsed
+        .map((r) => {
+          const startMs = r.start_ms ?? r.start ?? 0;
+          const endMs = r.end_ms ?? r.end ?? 0;
+          return { start: startMs / 1000, end: endMs / 1000, level: r.level };
+        })
+        .filter((r) => r.end > r.start);
+    } catch {
+      return [];
+    }
+  }, [project]);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (!project.bpm || !project.time_sig) return;
+      const beatMs = 60000 / project.bpm;
+      let delta = 0;
+      if (e.key === "ArrowLeft") delta = -beatMs;
+      if (e.key === "ArrowRight") delta = beatMs;
+      if (delta === 0) return;
+      e.preventDefault();
+      const newOffset = (project.downbeat_offset_ms ?? 0) + delta;
+      fetch(`/api/projects/${project.id}/update`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ downbeat_offset_ms: Math.round(newOffset) }),
+      }).then(() => location.reload());
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [project]);
 
   async function handleRegionCreated(startSec: number, endSec: number) {
     if (!project.bpm || !project.time_sig) return;
@@ -46,8 +99,19 @@ export function ProjectEditor({
       <p className="text-sm text-muted-foreground mb-4">
         {project.bpm ? `${Math.round(project.bpm)} BPM` : "..."} · {project.key} · {project.time_sig} · {project.genre}
       </p>
-      {project.instrumental_path && <Waveform audioUrl={audioUrl} regions={regions} onRegionCreated={handleRegionCreated} />}
-      <p className="text-xs text-muted-foreground mt-2">Drag on the waveform to create a section.</p>
+      {project.time_sig && <TimeSigBanner timeSig={project.time_sig} />}
+      {project.instrumental_path && (
+        <Waveform
+          audioUrl={audioUrl}
+          regions={regions}
+          barGridLines={barGridLines}
+          energyRegions={energyRegions}
+          onRegionCreated={handleRegionCreated}
+        />
+      )}
+      <p className="text-xs text-muted-foreground mt-2">
+        Drag on the waveform to create a section. Use ←/→ to nudge the downbeat by one beat.
+      </p>
     </main>
   );
 }
