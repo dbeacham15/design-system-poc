@@ -10,6 +10,10 @@ check command -v node
 check command -v pnpm
 check command -v python3
 check command -v uv
+check command -v rubberband
+check bash -c "cd audio_service && uv run python -c 'import pedalboard'"
+check bash -c "cd audio_service && uv run python -c 'import pyrubberband'"
+check bash -c "cd audio_service && uv run python -c 'import pyloudnorm'"
 check brew list libsndfile
 
 echo
