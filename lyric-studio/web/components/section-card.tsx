@@ -18,6 +18,8 @@ interface Props {
   projectId: string;
   section: Section;
   genre: string;
+  activeLineIdx?: number | null;
+  onPlayLineBars?: (line: Line) => void;
 }
 
 function parseLines(json: string | null | undefined): Line[] {
@@ -37,7 +39,7 @@ function parseLines(json: string | null | undefined): Line[] {
   }
 }
 
-export function SectionCard({ projectId, section, genre }: Props) {
+export function SectionCard({ projectId, section, genre, activeLineIdx = null, onPlayLineBars }: Props) {
   const [lines, setLines] = useState<Line[]>(() => parseLines(section.lines_json));
   const [notesOpen, setNotesOpen] = useState(false);
   const [notes, setNotes] = useState<string>(section.notes ?? "");
@@ -182,13 +184,14 @@ export function SectionCard({ projectId, section, genre }: Props) {
             key={idx}
             line={line}
             budget={budgets[idx] ?? 0}
+            isActive={activeLineIdx === idx}
             onChange={(patch) => updateLine(idx, patch)}
             onDelete={() => deleteLine(idx)}
             onMoveUp={() => moveLine(idx, -1)}
             onMoveDown={() => moveLine(idx, 1)}
             onRhyme={() => {}}
             onPolish={() => {}}
-            onPlayBars={() => {}}
+            onPlayBars={() => onPlayLineBars?.(line)}
           />
         ))}
       </div>

@@ -14,6 +14,7 @@ export interface Line {
 interface Props {
   line: Line;
   budget: number;
+  isActive?: boolean;
   onChange: (patch: Partial<Line>) => void;
   onDelete: () => void;
   onMoveUp: () => void;
@@ -24,7 +25,7 @@ interface Props {
 }
 
 export function LineCard({
-  line, budget, onChange, onDelete, onMoveUp, onMoveDown, onRhyme, onPolish, onPlayBars,
+  line, budget, isActive = false, onChange, onDelete, onMoveUp, onMoveDown, onRhyme, onPolish, onPlayBars,
 }: Props) {
   const [text, setText] = useState(line.text);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
@@ -44,7 +45,11 @@ export function LineCard({
     overBudget <= 2 ? "text-yellow-600" : "text-red-600";
 
   return (
-    <div className="flex items-center gap-2 group">
+    <div
+      className={`flex items-center gap-2 group rounded-md p-1 transition-shadow ${
+        isActive ? "ring-2 ring-primary bg-primary/5" : ""
+      }`}
+    >
       <Badge variant="outline">bars {line.bar_start}-{line.bar_end}</Badge>
       <Input value={text} onChange={(e) => setText(e.target.value)} placeholder="Write a line..." />
       <span className={`text-xs ${color} w-20 text-right`}>{syllableCount} / {budget}</span>

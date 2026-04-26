@@ -1,16 +1,39 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Project } from "@/lib/projects";
 import type { Section } from "@/lib/sections";
-import { Waveform, type EnergyRegion } from "@/components/waveform";
+import { Waveform, type EnergyRegion, type WaveformRef } from "@/components/waveform";
 import { TimeSigBanner } from "@/components/time-sig-banner";
 import { SectionCard } from "@/components/section-card";
+import { PlaybackControls } from "@/components/playback-controls";
+import type { Line } from "@/components/line-card";
 import { barLengthMs, barToMs, msToBar, snapMsToBar } from "@/lib/bar-math";
+
+function parseLines(json: string | null | undefined): Line[] {
+  if (!json) return [];
+  try {
+    const parsed = JSON.parse(json);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((l) => l && typeof l === "object")
+      .map((l) => ({
+        text: typeof l.text === "string" ? l.text : "",
+        bar_start: typeof l.bar_start === "number" ? l.bar_start : 0,
+        bar_end: typeof l.bar_end === "number" ? l.bar_end : 0,
+      }));
+  } catch {
+    return [];
+  }
+}
 
 export function ProjectEditor({
   project, initialSections,
 }: { project: Project; initialSections: Section[] }) {
   const [sections, setSections] = useState(initialSections);
+  const [currentMs, setCurrentMs] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const waveformRef = useRef<WaveformRef>(null);
+  const playBarsTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const audioUrl = `/api/projects/${project.id}/instrumental`;
 
@@ -57,6 +80,19 @@ export function ProjectEditor({
     }
   }, [project]);
 
+  const activeLineKey = useMemo<string | null>(() => {
+    if (!project.bpm || !project.time_sig) return null;
+    for (const s of sections) {
+      const lines = parseLines(s.lines_json);
+      for (let i = 0; i < lines.length; i++) {
+        const start = barToMs(lines[i].bar_start, project.downbeat_offset_ms ?? 0, project.bpm!, project.time_sig!);
+        const end = barToMs(lines[i].bar_end + 1, project.downbeat_offset_ms ?? 0, project.bpm!, project.time_sig!);
+        if (currentMs >= start && currentMs < end) return `${s.id}:${i}`;
+      }
+    }
+    return null;
+  }, [currentMs, sections, project]);
+
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (!project.bpm || !project.time_sig) return;
@@ -77,6 +113,15 @@ export function ProjectEditor({
     return () => window.removeEventListener("keydown", onKey);
   }, [project]);
 
+  useEffect(() => {
+    return () => {
+      if (playBarsTimerRef.current) {
+        clearTimeout(playBarsTimerRef.current);
+        playBarsTimerRef.current = null;
+      }
+    };
+  }, []);
+
   async function handleRegionCreated(startSec: number, endSec: number) {
     if (!project.bpm || !project.time_sig) return;
     const startMs = snapMsToBar(startSec * 1000, project.downbeat_offset_ms ?? 0, project.bpm, project.time_sig);
@@ -94,6 +139,51 @@ export function ProjectEditor({
     }
   }
 
+  const handlePlay = useCallback(() => {
+    if (playBarsTimerRef.current) {
+      clearTimeout(playBarsTimerRef.current);
+      playBarsTimerRef.current = null;
+    }
+    waveformRef.current?.play();
+  }, []);
+
+  const handlePause = useCallback(() => {
+    if (playBarsTimerRef.current) {
+      clearTimeout(playBarsTimerRef.current);
+      playBarsTimerRef.current = null;
+    }
+    waveformRef.current?.pause();
+  }, []);
+
+  const handleStop = useCallback(() => {
+    if (playBarsTimerRef.current) {
+      clearTimeout(playBarsTimerRef.current);
+      playBarsTimerRef.current = null;
+    }
+    waveformRef.current?.pause();
+    waveformRef.current?.seekToSec(0);
+    setCurrentMs(0);
+  }, []);
+
+  const handlePlayLineBars = useCallback(
+    (line: Line) => {
+      if (!project.bpm || !project.time_sig) return;
+      const ws = waveformRef.current;
+      if (!ws) return;
+      const startMs = barToMs(line.bar_start, project.downbeat_offset_ms ?? 0, project.bpm, project.time_sig);
+      const endMs = barToMs(line.bar_end + 1, project.downbeat_offset_ms ?? 0, project.bpm, project.time_sig);
+      const durationMs = Math.max(0, endMs - startMs);
+      if (playBarsTimerRef.current) clearTimeout(playBarsTimerRef.current);
+      ws.seekToSec(startMs / 1000);
+      ws.play();
+      playBarsTimerRef.current = setTimeout(() => {
+        waveformRef.current?.pause();
+        playBarsTimerRef.current = null;
+      }, durationMs);
+    },
+    [project]
+  );
+
   return (
     <main className="p-8">
       <h1 className="text-2xl font-bold mb-2">{project.title}</h1>
@@ -103,25 +193,46 @@ export function ProjectEditor({
       {project.time_sig && <TimeSigBanner timeSig={project.time_sig} />}
       {project.instrumental_path && (
         <Waveform
+          ref={waveformRef}
           audioUrl={audioUrl}
           regions={regions}
           barGridLines={barGridLines}
           energyRegions={energyRegions}
           onRegionCreated={handleRegionCreated}
+          onTimeUpdate={(sec) => setCurrentMs(sec * 1000)}
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
+          onFinish={() => setIsPlaying(false)}
+        />
+      )}
+      {project.instrumental_path && (
+        <PlaybackControls
+          isPlaying={isPlaying}
+          onPlay={handlePlay}
+          onPause={handlePause}
+          onStop={handleStop}
         />
       )}
       <p className="text-xs text-muted-foreground mt-2">
         Drag on the waveform to create a section. Use ←/→ to nudge the downbeat by one beat.
       </p>
       <div className="mt-6 space-y-4">
-        {sections.map((s) => (
-          <SectionCard
-            key={s.id}
-            projectId={project.id}
-            section={s}
-            genre={project.genre}
-          />
-        ))}
+        {sections.map((s) => {
+          const activeIdx =
+            activeLineKey && activeLineKey.startsWith(`${s.id}:`)
+              ? Number(activeLineKey.split(":")[1])
+              : null;
+          return (
+            <SectionCard
+              key={s.id}
+              projectId={project.id}
+              section={s}
+              genre={project.genre}
+              activeLineIdx={activeIdx}
+              onPlayLineBars={handlePlayLineBars}
+            />
+          );
+        })}
       </div>
     </main>
   );

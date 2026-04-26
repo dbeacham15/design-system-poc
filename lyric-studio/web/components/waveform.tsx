@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import WaveSurfer from "wavesurfer.js";
 import RegionsPlugin from "wavesurfer.js/dist/plugins/regions.js";
 
@@ -18,6 +18,13 @@ export interface EnergyRegion {
   level: string; // "low" | "medium" | "high"
 }
 
+export interface WaveformRef {
+  play(): void;
+  pause(): void;
+  seekToSec(s: number): void;
+  getCurrentSec(): number;
+}
+
 interface Props {
   audioUrl: string;
   regions: Region[];
@@ -25,6 +32,10 @@ interface Props {
   energyRegions?: EnergyRegion[];
   onRegionCreated?: (start: number, end: number) => void;
   onRegionUpdated?: (id: string, start: number, end: number) => void;
+  onTimeUpdate?: (seconds: number) => void;
+  onPlay?: () => void;
+  onPause?: () => void;
+  onFinish?: () => void;
 }
 
 const ENERGY_COLORS: Record<string, string> = {
@@ -33,19 +44,64 @@ const ENERGY_COLORS: Record<string, string> = {
   high: "rgba(255, 90, 90, 0.14)",
 };
 
-export function Waveform({
-  audioUrl,
-  regions,
-  barGridLines = [],
-  energyRegions = [],
-  onRegionCreated,
-  onRegionUpdated,
-}: Props) {
+export const Waveform = forwardRef<WaveformRef, Props>(function Waveform(
+  {
+    audioUrl,
+    regions,
+    barGridLines = [],
+    energyRegions = [],
+    onRegionCreated,
+    onRegionUpdated,
+    onTimeUpdate,
+    onPlay,
+    onPause,
+    onFinish,
+  },
+  ref
+) {
   const containerRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<WaveSurfer | null>(null);
   const regionsPluginRef = useRef<RegionsPlugin | null>(null);
   const [pixelsPerSecond, setPixelsPerSecond] = useState(0);
+
+  // Keep callbacks fresh inside the wavesurfer effect without re-instantiating it.
+  const onTimeUpdateRef = useRef(onTimeUpdate);
+  const onPlayRef = useRef(onPlay);
+  const onPauseRef = useRef(onPause);
+  const onFinishRef = useRef(onFinish);
+  const onRegionCreatedRef = useRef(onRegionCreated);
+  const onRegionUpdatedRef = useRef(onRegionUpdated);
+  useEffect(() => { onTimeUpdateRef.current = onTimeUpdate; }, [onTimeUpdate]);
+  useEffect(() => { onPlayRef.current = onPlay; }, [onPlay]);
+  useEffect(() => { onPauseRef.current = onPause; }, [onPause]);
+  useEffect(() => { onFinishRef.current = onFinish; }, [onFinish]);
+  useEffect(() => { onRegionCreatedRef.current = onRegionCreated; }, [onRegionCreated]);
+  useEffect(() => { onRegionUpdatedRef.current = onRegionUpdated; }, [onRegionUpdated]);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      play() {
+        wsRef.current?.play();
+      },
+      pause() {
+        wsRef.current?.pause();
+      },
+      seekToSec(s: number) {
+        const ws = wsRef.current;
+        if (!ws) return;
+        const dur = ws.getDuration();
+        if (!dur || dur <= 0) return;
+        const clamped = Math.max(0, Math.min(s, dur));
+        ws.setTime(clamped);
+      },
+      getCurrentSec() {
+        return wsRef.current?.getCurrentTime() ?? 0;
+      },
+    }),
+    []
+  );
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -64,11 +120,11 @@ export function Waveform({
     regionsPlugin.enableDragSelection({ color: "rgba(0, 100, 255, 0.2)" });
 
     regionsPlugin.on("region-created", (r) => {
-      onRegionCreated?.(r.start, r.end);
+      onRegionCreatedRef.current?.(r.start, r.end);
     });
 
     regionsPlugin.on("region-updated", (r) => {
-      onRegionUpdated?.(r.id, r.start, r.end);
+      onRegionUpdatedRef.current?.(r.id, r.start, r.end);
     });
 
     function updatePps() {
@@ -78,6 +134,31 @@ export function Waveform({
     }
 
     ws.on("ready", updatePps);
+
+    ws.on("audioprocess", (currentTime) => {
+      onTimeUpdateRef.current?.(currentTime);
+    });
+
+    ws.on("seeking", (currentTime) => {
+      onTimeUpdateRef.current?.(currentTime);
+    });
+
+    ws.on("interaction", (newTime) => {
+      // Fired when the user clicks on the waveform.
+      onTimeUpdateRef.current?.(newTime);
+    });
+
+    ws.on("play", () => {
+      onPlayRef.current?.();
+    });
+
+    ws.on("pause", () => {
+      onPauseRef.current?.();
+    });
+
+    ws.on("finish", () => {
+      onFinishRef.current?.();
+    });
 
     const ro = new ResizeObserver(updatePps);
     if (containerRef.current) ro.observe(containerRef.current);
@@ -132,4 +213,4 @@ export function Waveform({
       )}
     </div>
   );
-}
+});
