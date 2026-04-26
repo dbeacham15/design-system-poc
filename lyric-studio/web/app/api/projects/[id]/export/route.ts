@@ -6,6 +6,7 @@ import archiver from "archiver";
 import { getDb } from "@/lib/db";
 import { getProject } from "@/lib/projects";
 import { buildLyricsJson, buildLyricsMd } from "@/lib/exports";
+import { listTakes } from "@/lib/takes";
 
 function slug(s: string) {
   const out = s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
@@ -40,6 +41,29 @@ export async function GET(_: Request, ctx: { params: Promise<{ id: string }> }) 
     for (const f of ["lyrics.json", "lyrics.md", "project.json", "instrumental.wav"]) {
       const p = path.join(exportRoot, f);
       if (fs.existsSync(p)) archive.file(p, { name: f });
+    }
+    // Add takes: raw.wav + processed stems
+    const takes = listTakes(getDb(), id);
+    for (const take of takes) {
+      if (take.path && fs.existsSync(take.path)) {
+        archive.file(take.path, { name: `takes/${take.id}/raw.wav` });
+      }
+      if (take.is_processed) {
+        const stemsDir = path.dirname(take.path);
+        const stemFiles = [
+          "lead-tuned.wav",
+          "lead-double-L.wav",
+          "lead-double-R.wav",
+          "lead-harmony.wav",
+          "bounce.wav",
+        ];
+        for (const stemFile of stemFiles) {
+          const fp = path.join(stemsDir, stemFile);
+          if (fs.existsSync(fp)) {
+            archive.file(fp, { name: `takes/${take.id}/${stemFile}` });
+          }
+        }
+      }
     }
     archive.finalize();
   });
