@@ -10,7 +10,7 @@ export function GenreSelect({
   value, onChange,
 }: { value: string; onChange: (v: string) => void }) {
   return (
-    <Select value={value} onValueChange={onChange}>
+    <Select value={value} onValueChange={(v) => onChange(v ?? "")}>
       <SelectTrigger><SelectValue placeholder="Select a genre" /></SelectTrigger>
       <SelectContent>
         {GENRES.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}
