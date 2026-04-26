@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { countSyllables } from "@/lib/syllables";
 import { RhymePopover } from "@/components/rhyme-popover";
+import { PolishPopover } from "@/components/polish-popover";
 
 export interface Line {
   text: string;
@@ -23,7 +24,7 @@ interface Props {
   onMoveUp: () => void;
   onMoveDown: () => void;
   onRhyme: (args: { end_word: string; syllable_budget: number; line_index: number }) => Promise<{ word: string; type: "perfect" | "slant" }[]>;
-  onPolish: () => void;
+  onPolish: (args: { section_id: string; line_index: number; line: string }) => Promise<string>;
   onPlayBars: () => void;
 }
 
@@ -83,8 +84,12 @@ export function LineCard({
           onFetch={() => onRhyme({ end_word: getEndWord(), syllable_budget: budget, line_index: lineIndex })}
           onPick={handlePick}
         />
-        {/* TODO: wire Polish button — Task 19 */}
-        <Button size="sm" variant="ghost" onClick={onPolish} disabled>Polish</Button>
+        <PolishPopover
+          trigger={<Button size="sm" variant="ghost">Polish</Button>}
+          original={text}
+          onFetch={() => onPolish({ section_id: sectionId, line_index: lineIndex, line: text })}
+          onAccept={(polished) => { setText(polished); onChange({ text: polished }); }}
+        />
         <Button size="sm" variant="ghost" onClick={onMoveUp} aria-label="Up">↑</Button>
         <Button size="sm" variant="ghost" onClick={onMoveDown} aria-label="Down">↓</Button>
         <Button size="sm" variant="ghost" onClick={onDelete}>×</Button>

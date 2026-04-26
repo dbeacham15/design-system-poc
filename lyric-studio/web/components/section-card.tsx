@@ -232,7 +232,19 @@ export function SectionCard({ projectId, section, genre, activeLineIdx = null, o
               const data = await res.json();
               return data.rhymes;
             }}
-            onPolish={() => {}}
+            onPolish={async ({ section_id, line_index, line }) => {
+              const res = await fetch("/api/ai/polish", {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ section_id, line_index, line }),
+              });
+              if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error ?? "polish request failed");
+              }
+              const data = await res.json();
+              return data.polished;
+            }}
             onPlayBars={() => onPlayLineBars?.(line)}
           />
         ))}

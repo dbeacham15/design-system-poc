@@ -94,3 +94,29 @@ ${args.prev_section_lyrics || "(none)"}`,
   const cleaned = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
   return JSON.parse(cleaned);
 }
+
+export async function polishLine(args: {
+  line: string;
+  section_notes: string | null;
+  same_section_lyrics: string;
+  genre: string;
+}): Promise<string> {
+  const message = await client.messages.create({
+    model: HAIKU,
+    max_tokens: 200,
+    system: "You are a lyric editor. Return ONE polished version of the user's line — same meaning, same rough syllable count, tighter wording or stronger imagery. Never change the meaning. Output ONLY the polished line, no quotes, no preamble, no markdown.",
+    messages: [{
+      role: "user",
+      content: `Genre: ${args.genre}
+Section notes: ${args.section_notes ?? "(none)"}
+Same-section lyrics so far:
+${args.same_section_lyrics || "(none)"}
+
+Polish this line:
+${args.line}`,
+    }],
+  });
+  const block = message.content[0];
+  if (block.type !== "text") throw new Error("unexpected");
+  return block.text.trim();
+}
