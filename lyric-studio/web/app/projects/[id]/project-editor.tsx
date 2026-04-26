@@ -2,6 +2,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Project } from "@/lib/projects";
 import type { Section } from "@/lib/sections";
+import type { Take } from "@/lib/takes";
+import { VoiceStudio } from "@/components/voice/voice-studio";
 import { Waveform, type EnergyRegion, type WaveformRef } from "@/components/waveform";
 import { TimeSigBanner } from "@/components/time-sig-banner";
 import { SectionCard } from "@/components/section-card";
@@ -28,14 +30,15 @@ function parseLines(json: string | null | undefined): Line[] {
 }
 
 export function ProjectEditor({
-  project, initialSections,
-}: { project: Project; initialSections: Section[] }) {
+  project, initialSections, initialTakes,
+}: { project: Project; initialSections: Section[]; initialTakes: Take[] }) {
   const [sections, setSections] = useState(initialSections);
   const [currentMs, setCurrentMs] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [status, setStatus] = useState(project.status);
   const waveformRef = useRef<WaveformRef>(null);
   const playBarsTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [tab, setTab] = useState<"lyrics" | "voice">("lyrics");
 
   const lyricsDone = status === "lyrics_done";
 
@@ -199,67 +202,95 @@ export function ProjectEditor({
   );
 
   return (
-    <main className="p-8">
-      <div className="flex items-start justify-between mb-2 gap-4">
-        <div>
-          <h1 className="text-2xl font-bold mb-2">{project.title}</h1>
-          <p className="text-sm text-muted-foreground">
-            {project.bpm ? `${Math.round(project.bpm)} BPM` : "..."} · {project.key} · {project.time_sig} · {project.genre}
-          </p>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <Button variant={lyricsDone ? "default" : "outline"} onClick={toggleLyricsDone}>
-            {lyricsDone ? "Lyrics done ✓" : "Mark lyrics done"}
-          </Button>
-          <a href={`/api/projects/${project.id}/export`} download>
-            <Button variant="outline">Download zip</Button>
-          </a>
-        </div>
+    <div className="flex flex-col h-screen">
+      {/* Tab bar */}
+      <div className="flex border-b shrink-0">
+        <button
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            tab === "lyrics" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+          onClick={() => setTab("lyrics")}
+        >
+          Lyrics
+        </button>
+        <button
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            tab === "voice" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+          onClick={() => setTab("voice")}
+        >
+          Voice Studio
+        </button>
       </div>
-      {project.time_sig && <TimeSigBanner timeSig={project.time_sig} />}
-      {project.instrumental_path && (
-        <Waveform
-          ref={waveformRef}
-          audioUrl={audioUrl}
-          regions={regions}
-          barGridLines={barGridLines}
-          energyRegions={energyRegions}
-          onRegionCreated={handleRegionCreated}
-          onTimeUpdate={(sec) => setCurrentMs(sec * 1000)}
-          onPlay={() => setIsPlaying(true)}
-          onPause={() => setIsPlaying(false)}
-          onFinish={() => setIsPlaying(false)}
-        />
-      )}
-      {project.instrumental_path && (
-        <PlaybackControls
-          isPlaying={isPlaying}
-          onPlay={handlePlay}
-          onPause={handlePause}
-          onStop={handleStop}
-        />
-      )}
-      <p className="text-xs text-muted-foreground mt-2">
-        Drag on the waveform to create a section. Use ←/→ to nudge the downbeat by one beat.
-      </p>
-      <div className="mt-6 space-y-4">
-        {sections.map((s) => {
-          const activeIdx =
-            activeLineKey && activeLineKey.startsWith(`${s.id}:`)
-              ? Number(activeLineKey.split(":")[1])
-              : null;
-          return (
-            <SectionCard
-              key={s.id}
-              projectId={project.id}
-              section={s}
-              genre={project.genre}
-              activeLineIdx={activeIdx}
-              onPlayLineBars={handlePlayLineBars}
+
+      {tab === "voice" ? (
+        <div className="flex-1 overflow-y-auto">
+          <VoiceStudio project={project} />
+        </div>
+      ) : (
+        <main className="p-8">
+          <div className="flex items-start justify-between mb-2 gap-4">
+            <div>
+              <h1 className="text-2xl font-bold mb-2">{project.title}</h1>
+              <p className="text-sm text-muted-foreground">
+                {project.bpm ? `${Math.round(project.bpm)} BPM` : "..."} · {project.key} · {project.time_sig} · {project.genre}
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Button variant={lyricsDone ? "default" : "outline"} onClick={toggleLyricsDone}>
+                {lyricsDone ? "Lyrics done ✓" : "Mark lyrics done"}
+              </Button>
+              <a href={`/api/projects/${project.id}/export`} download>
+                <Button variant="outline">Download zip</Button>
+              </a>
+            </div>
+          </div>
+          {project.time_sig && <TimeSigBanner timeSig={project.time_sig} />}
+          {project.instrumental_path && (
+            <Waveform
+              ref={waveformRef}
+              audioUrl={audioUrl}
+              regions={regions}
+              barGridLines={barGridLines}
+              energyRegions={energyRegions}
+              onRegionCreated={handleRegionCreated}
+              onTimeUpdate={(sec) => setCurrentMs(sec * 1000)}
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
+              onFinish={() => setIsPlaying(false)}
             />
-          );
-        })}
-      </div>
-    </main>
+          )}
+          {project.instrumental_path && (
+            <PlaybackControls
+              isPlaying={isPlaying}
+              onPlay={handlePlay}
+              onPause={handlePause}
+              onStop={handleStop}
+            />
+          )}
+          <p className="text-xs text-muted-foreground mt-2">
+            Drag on the waveform to create a section. Use ←/→ to nudge the downbeat by one beat.
+          </p>
+          <div className="mt-6 space-y-4">
+            {sections.map((s) => {
+              const activeIdx =
+                activeLineKey && activeLineKey.startsWith(`${s.id}:`)
+                  ? Number(activeLineKey.split(":")[1])
+                  : null;
+              return (
+                <SectionCard
+                  key={s.id}
+                  projectId={project.id}
+                  section={s}
+                  genre={project.genre}
+                  activeLineIdx={activeIdx}
+                  onPlayLineBars={handlePlayLineBars}
+                />
+              );
+            })}
+          </div>
+        </main>
+      )}
+    </div>
   );
 }

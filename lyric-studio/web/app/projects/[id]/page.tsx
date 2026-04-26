@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { getProject } from "@/lib/projects";
 import { listSections } from "@/lib/sections";
+import { listTakes } from "@/lib/takes";
 import { ProjectEditor } from "./project-editor";
 
 export default async function ProjectPage({ params }: { params: Promise<{ id: string }> }) {
@@ -9,5 +10,6 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
   const project = getProject(getDb(), id);
   if (!project) notFound();
   const sections = listSections(getDb(), id);
-  return <ProjectEditor project={project} initialSections={sections} />;
+  const takes = listTakes(getDb(), id);
+  return <ProjectEditor project={project} initialSections={sections} initialTakes={takes} />;
 }
