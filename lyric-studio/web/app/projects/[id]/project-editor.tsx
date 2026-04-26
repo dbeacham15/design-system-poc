@@ -7,6 +7,7 @@ import { TimeSigBanner } from "@/components/time-sig-banner";
 import { SectionCard } from "@/components/section-card";
 import { PlaybackControls } from "@/components/playback-controls";
 import type { Line } from "@/components/line-card";
+import { Button } from "@/components/ui/button";
 import { barLengthMs, barToMs, msToBar, snapMsToBar } from "@/lib/bar-math";
 
 function parseLines(json: string | null | undefined): Line[] {
@@ -32,8 +33,21 @@ export function ProjectEditor({
   const [sections, setSections] = useState(initialSections);
   const [currentMs, setCurrentMs] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [status, setStatus] = useState(project.status);
   const waveformRef = useRef<WaveformRef>(null);
   const playBarsTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const lyricsDone = status === "lyrics_done";
+
+  const toggleLyricsDone = useCallback(async () => {
+    const next = lyricsDone ? "drafting" : "lyrics_done";
+    const r = await fetch(`/api/projects/${project.id}/update`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ status: next }),
+    });
+    if (r.ok) setStatus(next);
+  }, [lyricsDone, project.id]);
 
   const audioUrl = `/api/projects/${project.id}/instrumental`;
 
@@ -186,10 +200,22 @@ export function ProjectEditor({
 
   return (
     <main className="p-8">
-      <h1 className="text-2xl font-bold mb-2">{project.title}</h1>
-      <p className="text-sm text-muted-foreground mb-4">
-        {project.bpm ? `${Math.round(project.bpm)} BPM` : "..."} · {project.key} · {project.time_sig} · {project.genre}
-      </p>
+      <div className="flex items-start justify-between mb-2 gap-4">
+        <div>
+          <h1 className="text-2xl font-bold mb-2">{project.title}</h1>
+          <p className="text-sm text-muted-foreground">
+            {project.bpm ? `${Math.round(project.bpm)} BPM` : "..."} · {project.key} · {project.time_sig} · {project.genre}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <Button variant={lyricsDone ? "default" : "outline"} onClick={toggleLyricsDone}>
+            {lyricsDone ? "Lyrics done ✓" : "Mark lyrics done"}
+          </Button>
+          <a href={`/api/projects/${project.id}/export`} download>
+            <Button variant="outline">Download zip</Button>
+          </a>
+        </div>
+      </div>
       {project.time_sig && <TimeSigBanner timeSig={project.time_sig} />}
       {project.instrumental_path && (
         <Waveform
