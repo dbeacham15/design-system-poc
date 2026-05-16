@@ -1,0 +1,20 @@
+{
+  "expo": {
+    "name": "Companion",
+    "slug": "dementia-companion-tablet",
+    "version": "1.0.0",
+    "orientation": "landscape",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Your companion needs the microphone to hear you speak.",
+        "NSCameraUsageDescription": "Used to verify your identity."
+      }
+    },
+    "android": {
+      "adaptiveIcon": { "backgroundColor": "#ffffff" },
+      "permissions": ["RECORD_AUDIO"]
+    }
+  }
+}
