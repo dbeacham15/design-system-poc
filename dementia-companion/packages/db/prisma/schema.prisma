@@ -1,0 +1,172 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model CaregiverAccount {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  mfaSecret    String?
+  mfaEnabled   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  patients      Patient[]
+  refreshTokens RefreshToken[]
+}
+
+model RefreshToken {
+  id          String   @id @default(cuid())
+  token       String   @unique
+  caregiverId String
+  caregiver   CaregiverAccount @relation(fields: [caregiverId], references: [id], onDelete: Cascade)
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+}
+
+model Patient {
+  id          String   @id @default(cuid())
+  caregiverId String
+  caregiver   CaregiverAccount @relation(fields: [caregiverId], references: [id], onDelete: Cascade)
+  name        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  companion         Companion?
+  memoryCards       MemoryCard[]
+  conversations     Conversation[]
+  safetyEvents      SafetyEvent[]
+  scheduledCheckIns ScheduledCheckIn[]
+  deviceTokens      DeviceToken[]
+}
+
+model Companion {
+  id                   String   @id @default(cuid())
+  patientId            String   @unique
+  patient              Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  name                 String
+  voiceId              String
+  personalityStyle     String   // "warm", "gentle", "cheerful", "calm"
+  engagementLevel      String   // "low", "medium", "high"
+  genderPresentation   String   // "feminine", "masculine", "neutral"
+  speakingStyle        String   // "simple", "conversational", "nurturing"
+  systemPromptOverride String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model MemoryCard {
+  id             String   @id @default(cuid())
+  patientId      String
+  patient        Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  type           String   // "person", "place", "topic", "behavior"
+  label          String   // "Daughter Linda", "Home in Savannah", "Money anxiety"
+  sentiment      String   // "positive", "avoid", "handle-carefully", "neutral"
+  structuredData Json?    // { relationship: "daughter", location: "Seattle" }
+  freeText       String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model DeviceToken {
+  id         String    @id @default(cuid())
+  patientId  String
+  patient    Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  token      String    @unique @default(cuid())
+  deviceName String?
+  lastSeenAt DateTime?
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+}
+
+model Conversation {
+  id        String    @id @default(cuid())
+  patientId String
+  patient   Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  startedAt DateTime  @default(now())
+  endedAt   DateTime?
+  summary   String?
+  moodScore Int?      // 1-5, AI-inferred
+
+  turns        ConversationTurn[]
+  safetyEvents SafetyEvent[]
+}
+
+model ConversationTurn {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           String       // "patient" | "companion"
+  content        String
+  timestamp      DateTime     @default(now())
+  flagged        Boolean      @default(false)
+}
+
+model SafetyEvent {
+  id             String        @id @default(cuid())
+  patientId      String
+  patient        Patient       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  conversationId String?
+  conversation   Conversation? @relation(fields: [conversationId], references: [id])
+  severity       String        // "concerning" | "severe"
+  trigger        String        // "self-harm" | "wandering" | "fall" | "threat" | "dangerous-confusion"
+  transcript     String
+  acknowledgedAt DateTime?
+  acknowledgedBy String?
+  createdAt      DateTime      @default(now())
+
+  notifications SafetyNotification[]
+}
+
+model SafetyNotification {
+  id              String      @id @default(cuid())
+  safetyEventId   String
+  safetyEvent     SafetyEvent @relation(fields: [safetyEventId], references: [id])
+  channel         String      // "sms" | "push"
+  recipient       String      // phone number or caregiver id
+  sentAt          DateTime    @default(now())
+  reminderSentAt  DateTime?
+}
+
+model EmergencyContact {
+  id          String   @id @default(cuid())
+  caregiverId String
+  name        String
+  phone       String
+  isPrimary   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model ScheduledCheckIn {
+  id        String   @id @default(cuid())
+  patientId String
+  patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  label     String   // "Good morning", "Medication reminder"
+  cronExpr  String   // "0 8 * * *"
+  message   String?  // Optional caregiver message to weave in
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model CaregiverMessage {
+  id          String    @id @default(cuid())
+  patientId   String
+  fromName    String
+  message     String
+  deliveredAt DateTime?
+  createdAt   DateTime  @default(now())
+}
+
+model PairingCode {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  patientId String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+}

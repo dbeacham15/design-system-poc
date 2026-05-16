@@ -1,0 +1,14 @@
+{
+  "name": "dementia-companion",
+  "private": true,
+  "workspaces": ["apps/*", "packages/*", "server"],
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "test": "turbo test"
+  },
+  "devDependencies": {
+    "turbo": "latest",
+    "typescript": "^5.4.0"
+  }
+}
