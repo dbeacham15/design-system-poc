@@ -5,7 +5,18 @@ import { registerCaregiver, validateCaregiver, createRefreshToken, rotateRefresh
 import { caregiverAuthHook } from '../middleware/caregiver-auth'
 
 export const authRoutes: FastifyPluginAsync = async (fastify) => {
-  fastify.post('/register', async (request, reply) => {
+  fastify.post('/register', {
+    schema: {
+      body: {
+        type: 'object',
+        required: ['email', 'password'],
+        properties: {
+          email: { type: 'string', format: 'email' },
+          password: { type: 'string', minLength: 8 },
+        },
+      },
+    },
+  }, async (request, reply) => {
     const { email, password } = request.body as { email: string; password: string }
     try {
       const account = await registerCaregiver(email, password)
@@ -19,7 +30,18 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
     }
   })
 
-  fastify.post('/login', async (request, reply) => {
+  fastify.post('/login', {
+    schema: {
+      body: {
+        type: 'object',
+        required: ['email', 'password'],
+        properties: {
+          email: { type: 'string', format: 'email' },
+          password: { type: 'string', minLength: 8 },
+        },
+      },
+    },
+  }, async (request, reply) => {
     const { email, password } = request.body as { email: string; password: string }
     try {
       const account = await validateCaregiver(email, password)

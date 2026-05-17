@@ -6,7 +6,20 @@ import { prisma } from '@dementia/db'
 
 export const caregiverMessageRoutes: FastifyPluginAsync = async (fastify) => {
   // Caregiver sends a message via dashboard
-  fastify.post('/', { preHandler: caregiverAuthHook }, async (request, reply) => {
+  fastify.post('/', {
+    preHandler: caregiverAuthHook,
+    schema: {
+      body: {
+        type: 'object',
+        required: ['patientId', 'fromName', 'message'],
+        properties: {
+          patientId: { type: 'string' },
+          fromName: { type: 'string' },
+          message: { type: 'string' },
+        },
+      },
+    },
+  }, async (request, reply) => {
     const { patientId, fromName, message } = request.body as {
       patientId: string; fromName: string; message: string
     }
