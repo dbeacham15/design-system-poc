@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import Fastify, { FastifyInstance } from 'fastify'
 import cors from '@fastify/cors'
 import helmet from '@fastify/helmet'
@@ -9,6 +10,7 @@ import { deviceRoutes } from './routes/devices'
 import { voiceSessionRoutes } from './routes/voice-session'
 import { safetyRoutes } from './routes/safety'
 import { caregiverMessageRoutes } from './routes/caregiver-messages'
+import { emergencyContactRoutes } from './routes/emergency-contacts'
 
 export async function build(opts: { logger?: boolean } = {}): Promise<FastifyInstance> {
   const server = Fastify({ logger: opts.logger ?? true })
@@ -30,6 +32,7 @@ export async function build(opts: { logger?: boolean } = {}): Promise<FastifyIns
   await server.register(voiceSessionRoutes, { prefix: '/api/voice' })
   await server.register(safetyRoutes, { prefix: '/api/safety' })
   await server.register(caregiverMessageRoutes, { prefix: '/api/messages' })
+  await server.register(emergencyContactRoutes, { prefix: '/api/emergency-contacts' })
 
   server.get('/health', async () => ({ status: 'ok' }))
 
