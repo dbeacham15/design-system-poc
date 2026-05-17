@@ -32,3 +32,12 @@ export async function createRefreshToken(caregiverId: string) {
   await prisma.refreshToken.create({ data: { token, caregiverId, expiresAt } })
   return token
 }
+
+export async function rotateRefreshToken(token: string) {
+  const record = await prisma.refreshToken.findUnique({ where: { token } })
+  if (!record || record.expiresAt < new Date()) throw new Error('INVALID_REFRESH_TOKEN')
+  // delete old, issue new
+  await prisma.refreshToken.delete({ where: { id: record.id } })
+  const newRefresh = await createRefreshToken(record.caregiverId)
+  return { caregiverId: record.caregiverId, newRefreshToken: newRefresh }
+}
