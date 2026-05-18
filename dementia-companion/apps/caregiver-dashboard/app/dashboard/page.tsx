@@ -3,11 +3,19 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import api from '../../lib/api'
 import { SafetyAlertCard } from '../../components/SafetyAlertCard'
 import { SendMessageModal } from '../../components/SendMessageModal'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function DashboardPage() {
   const [showMessageModal, setShowMessageModal] = useState(false)
   const qc = useQueryClient()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!localStorage.getItem('access_token')) {
+      router.push('/login')
+    }
+  }, [])
 
   const { data: safetyEvents } = useQuery({
     queryKey: ['safety-events'],

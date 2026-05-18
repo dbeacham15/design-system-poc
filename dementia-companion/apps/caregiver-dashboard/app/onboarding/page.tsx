@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { PatientStep } from './steps/PatientStep'
 import { CompanionStep } from './steps/CompanionStep'
 import { MemoryStep } from './steps/MemoryStep'
@@ -12,6 +12,12 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(0)
   const [patientId, setPatientId] = useState<string | null>(null)
   const router = useRouter()
+
+  useEffect(() => {
+    if (!localStorage.getItem('access_token')) {
+      router.push('/login')
+    }
+  }, [])
 
   const next = () => {
     if (step < STEPS.length - 1) setStep(s => s + 1)
