@@ -42,8 +42,10 @@ export async function build(opts: { logger?: boolean } = {}): Promise<FastifyIns
 // Only listen when run directly (not during tests)
 if (require.main === module) {
   const { startScheduler } = require('./services/scheduler.service')
-  build().then(server => {
+  const { startSafetyReminderJob } = require('./services/safety.service')
+  build().then(async server => {
     server.listen({ port: 3001, host: '0.0.0.0' })
-    startScheduler()
+    await startScheduler()
+    startSafetyReminderJob()
   })
 }

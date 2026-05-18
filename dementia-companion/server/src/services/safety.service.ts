@@ -1,9 +1,17 @@
 // server/src/services/safety.service.ts
+import cron from 'node-cron'
 import twilio from 'twilio'
 import { prisma } from '@dementia/db'
 import type { SafetySeverity, SafetyTrigger } from '@dementia/types'
 
-const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
+async function sendSms(to: string, body: string) {
+  if (process.env.MOCK_SMS === 'true') {
+    console.log(`[MOCK SMS] → ${to}: ${body}`)
+    return
+  }
+  const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
+  await client.messages.create({ body, from: process.env.TWILIO_FROM_NUMBER!, to })
+}
 
 const SAFETY_PATTERNS: Array<{ pattern: RegExp; severity: SafetySeverity; trigger: SafetyTrigger }> = [
   { pattern: /hurt myself|kill myself|don't want to live|want to die|end it all/i, severity: 'severe', trigger: 'self-harm' },
@@ -59,20 +67,12 @@ export async function handleSafetyEvent(
 
   await Promise.all(
     contacts.map(async (contact) => {
-      await twilioClient.messages.create({
-        body: message,
-        from: process.env.TWILIO_FROM_NUMBER!,
-        to: contact.phone,
-      })
+      await sendSms(contact.phone, message)
       await prisma.safetyNotification.create({
         data: { safetyEventId: event.id, channel: 'sms', recipient: contact.phone },
       })
     })
   )
-
-  // Schedule reminder if unacknowledged
-  const reminderDelay = severity === 'severe' ? 5 * 60 * 1000 : 30 * 60 * 1000
-  setTimeout(() => sendReminderIfUnacknowledged(event.id, contacts, message), reminderDelay)
 
   return event
 }
@@ -90,21 +90,37 @@ function buildAlertMessage(patientName: string, severity: SafetySeverity, trigge
   return `${urgency}: ${patientName} ${triggerLabels[trigger]}. Please check on them immediately. Log in to the caregiver dashboard to acknowledge this alert.`
 }
 
-async function sendReminderIfUnacknowledged(eventId: string, contacts: any[], message: string) {
-  const event = await prisma.safetyEvent.findUnique({ where: { id: eventId } })
-  if (event?.acknowledgedAt) return // Already acknowledged
+export function startSafetyReminderJob() {
+  cron.schedule('* * * * *', async () => {
+    const now = new Date()
+    const cutoffs = {
+      severe: new Date(now.getTime() - 5 * 60 * 1000),
+      concerning: new Date(now.getTime() - 30 * 60 * 1000),
+    }
 
-  await Promise.all(
-    contacts.map(async (contact) => {
-      await twilioClient.messages.create({
-        body: `REMINDER: ${message}`,
-        from: process.env.TWILIO_FROM_NUMBER!,
-        to: contact.phone,
-      })
-      await prisma.safetyNotification.updateMany({
-        where: { safetyEventId: eventId, recipient: contact.phone },
-        data: { reminderSentAt: new Date() },
-      })
+    const overdueEvents = await prisma.safetyEvent.findMany({
+      where: {
+        acknowledgedAt: null,
+        OR: [
+          { severity: 'severe', createdAt: { lte: cutoffs.severe }, notifications: { none: { reminderSentAt: { not: null } } } },
+          { severity: 'concerning', createdAt: { lte: cutoffs.concerning }, notifications: { none: { reminderSentAt: { not: null } } } },
+        ],
+      },
+      include: { patient: { include: { caregiver: true } } },
     })
-  )
+
+    for (const event of overdueEvents) {
+      const contacts = await prisma.emergencyContact.findMany({
+        where: { caregiverId: event.patient.caregiverId },
+      })
+      const message = buildAlertMessage(event.patient.name, event.severity as any, event.trigger as any)
+      for (const contact of contacts) {
+        await sendSms(contact.phone, `REMINDER: ${message}`)
+        await prisma.safetyNotification.updateMany({
+          where: { safetyEventId: event.id, recipient: contact.phone },
+          data: { reminderSentAt: new Date() },
+        })
+      }
+    }
+  })
 }
