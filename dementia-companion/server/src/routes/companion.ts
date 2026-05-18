@@ -135,20 +135,24 @@ export const companionRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.status(400).send({ error: { code: 'INVALID_INPUT', message: 'portraitUrl is required' } })
     }
 
-    // Validate the portrait is animatable via talking head adapter
-    try {
-      const adapter = createSimliAdapter()
-      const validation = await adapter.validatePortrait(portraitUrl)
-      if (!validation.valid) {
-        return reply.status(400).send({
-          error: { code: 'PORTRAIT_UNANIMATABLE', message: validation.reason ?? 'Portrait face is not detectable or animatable' },
-        })
+    // Validate the portrait is animatable via talking head adapter.
+    // Skip validation in dev when SIMLI_API_KEY is absent — idle loop and live sessions
+    // will also be skipped below, so the companion runs audio-only until a key is configured.
+    if (process.env.SIMLI_API_KEY) {
+      try {
+        const adapter = createSimliAdapter()
+        const validation = await adapter.validatePortrait(portraitUrl)
+        if (!validation.valid) {
+          return reply.status(400).send({
+            error: { code: 'PORTRAIT_UNANIMATABLE', message: validation.reason ?? 'Portrait face is not detectable or animatable' },
+          })
+        }
+      } catch (err) {
+        if (err instanceof TalkingHeadError) {
+          return reply.status(502).send({ error: { code: 'ADAPTER_ERROR', message: err.message } })
+        }
+        throw err
       }
-    } catch (err) {
-      if (err instanceof TalkingHeadError) {
-        return reply.status(502).send({ error: { code: 'ADAPTER_ERROR', message: err.message } })
-      }
-      throw err
     }
 
     // Store portrait URL
@@ -223,13 +227,15 @@ async function generateAvatarAssets(
 ) {
   const openai = getOpenAI()
 
-  // Generate idle loop video via Simli
-  try {
-    const adapter = createSimliAdapter()
-    const { videoUrl } = await adapter.generateIdleLoop(portraitUrl)
-    await prisma.companion.update({ where: { id: companionId }, data: { idleLoopVideoUrl: videoUrl } })
-  } catch (err) {
-    console.error('Idle loop generation failed:', err)
+  // Generate idle loop video via Simli (skipped in dev when SIMLI_API_KEY is absent)
+  if (process.env.SIMLI_API_KEY) {
+    try {
+      const adapter = createSimliAdapter()
+      const { videoUrl } = await adapter.generateIdleLoop(portraitUrl)
+      await prisma.companion.update({ where: { id: companionId }, data: { idleLoopVideoUrl: videoUrl } })
+    } catch (err) {
+      console.error('Idle loop generation failed:', err)
+    }
   }
 
   // Generate introduction audio via OpenAI TTS — warm first-meeting script

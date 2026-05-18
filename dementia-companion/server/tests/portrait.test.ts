@@ -41,6 +41,8 @@ const EMAIL = 'portrait-test@example.com'
 const PASSWORD = 'test-password-123'
 
 beforeAll(async () => {
+  // Ensure SIMLI_API_KEY is set so the validation path runs (adapter is mocked above)
+  process.env.SIMLI_API_KEY = 'test-simli-key'
   server = await build({ logger: false })
 
   // Create caregiver
