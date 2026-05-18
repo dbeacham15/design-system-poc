@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import api from '../lib/api'
 
 export function SendMessageModal({ onClose }: { onClose: () => void }) {
@@ -7,6 +7,11 @@ export function SendMessageModal({ onClose }: { onClose: () => void }) {
   const [fromName, setFromName] = useState('')
   const [patientId, setPatientId] = useState('')
   const [sent, setSent] = useState(false)
+  const [patients, setPatients] = useState<Array<{ id: string; name: string }>>([])
+
+  useEffect(() => {
+    api.get('/api/patients').then(r => setPatients(r.data.data)).catch(() => {})
+  }, [])
 
   const send = async () => {
     await api.post('/api/messages', { patientId, fromName, message })
@@ -28,6 +33,14 @@ export function SendMessageModal({ onClose }: { onClose: () => void }) {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="e.g. Linda" />
             </div>
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">For</label>
+              <select value={patientId} onChange={e => setPatientId(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2">
+                <option value="">Select patient...</option>
+                {patients.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
               <textarea value={message} onChange={e => setMessage(e.target.value)} rows={3}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 resize-none"
@@ -35,7 +48,7 @@ export function SendMessageModal({ onClose }: { onClose: () => void }) {
             </div>
             <div className="flex gap-3 pt-2">
               <button onClick={onClose} className="flex-1 border border-gray-300 rounded-lg py-2.5 text-sm">Cancel</button>
-              <button onClick={send} disabled={!message || !fromName}
+              <button onClick={send} disabled={!message || !fromName || !patientId}
                 className="flex-1 bg-amber-800 text-white rounded-lg py-2.5 text-sm font-medium disabled:opacity-50">
                 Send Message
               </button>

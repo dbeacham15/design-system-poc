@@ -42,7 +42,7 @@ export default function OnboardingPage() {
       {step === 0 && <PatientStep onComplete={(id) => { setPatientId(id); next() }} />}
       {step === 1 && patientId && <CompanionStep patientId={patientId} onComplete={next} />}
       {step === 2 && patientId && <MemoryStep patientId={patientId} onComplete={next} />}
-      {step === 3 && patientId && <SafetyStep caregiverId="me" onComplete={next} />}
+      {step === 3 && patientId && <SafetyStep onComplete={next} />}
     </div>
   )
 }

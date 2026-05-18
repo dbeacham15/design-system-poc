@@ -8,7 +8,7 @@ interface Contact {
   isPrimary: boolean
 }
 
-export function SafetyStep({ caregiverId, onComplete }: { caregiverId: string; onComplete: () => void }) {
+export function SafetyStep({ onComplete }: { onComplete: () => void }) {
   const [contacts, setContacts] = useState<Contact[]>([])
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
