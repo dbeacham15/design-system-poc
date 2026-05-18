@@ -1,23 +1,20 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { PatientStep } from './steps/PatientStep'
 import { CompanionStep } from './steps/CompanionStep'
+import { AppearanceStep } from './steps/AppearanceStep'
+import { ApprovePortraitStep } from './steps/ApprovePortraitStep'
 import { MemoryStep } from './steps/MemoryStep'
 import { SafetyStep } from './steps/SafetyStep'
 import { useRouter } from 'next/navigation'
 
-const STEPS = ['Patient', 'Companion', 'Memory', 'Safety']
+const STEPS = ['Patient', 'Companion', 'Appearance', 'Portrait', 'Memory', 'Safety']
 
 export default function OnboardingPage() {
   const [step, setStep] = useState(0)
   const [patientId, setPatientId] = useState<string | null>(null)
+  const [portraitOptions, setPortraitOptions] = useState<string[]>([])
   const router = useRouter()
-
-  useEffect(() => {
-    if (!localStorage.getItem('access_token')) {
-      router.push('/login')
-    }
-  }, [])
 
   const next = () => {
     if (step < STEPS.length - 1) setStep(s => s + 1)
@@ -26,7 +23,6 @@ export default function OnboardingPage() {
 
   return (
     <div className="min-h-screen bg-amber-50 flex flex-col items-center justify-center p-8">
-      {/* Progress indicator */}
       <div className="flex gap-3 mb-10">
         {STEPS.map((label, i) => (
           <div key={label} className="flex items-center gap-2">
@@ -41,8 +37,22 @@ export default function OnboardingPage() {
 
       {step === 0 && <PatientStep onComplete={(id) => { setPatientId(id); next() }} />}
       {step === 1 && patientId && <CompanionStep patientId={patientId} onComplete={next} />}
-      {step === 2 && patientId && <MemoryStep patientId={patientId} onComplete={next} />}
-      {step === 3 && patientId && <SafetyStep onComplete={next} />}
+      {step === 2 && patientId && (
+        <AppearanceStep
+          patientId={patientId}
+          onComplete={(options) => { setPortraitOptions(options); next() }}
+        />
+      )}
+      {step === 3 && patientId && (
+        <ApprovePortraitStep
+          patientId={patientId}
+          options={portraitOptions}
+          onComplete={next}
+          onRegenerate={() => setStep(2)}
+        />
+      )}
+      {step === 4 && patientId && <MemoryStep patientId={patientId} onComplete={next} />}
+      {step === 5 && patientId && <SafetyStep onComplete={next} />}
     </div>
   )
 }

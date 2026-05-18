@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: dementia-companion-db
+    environment:
+      POSTGRES_DB: dementia_companion
+      POSTGRES_USER: dementia
+      POSTGRES_PASSWORD: dementia_local
+    ports:
+      - "5435:5432"
+    volumes:
+      - dementia_db_data:/var/lib/postgresql/data
+
+volumes:
+  dementia_db_data:

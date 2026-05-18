@@ -45,19 +45,28 @@ model Patient {
   deviceTokens      DeviceToken[]
 }
 
+enum PersonalityPreset {
+  WARM_NURTURER
+  CHEERFUL_FRIEND
+  CALM_PRESENCE
+  WISE_COMPANION
+}
+
 model Companion {
-  id                   String   @id @default(cuid())
-  patientId            String   @unique
-  patient              Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  id                   String            @id @default(cuid())
+  patientId            String            @unique
+  patient              Patient           @relation(fields: [patientId], references: [id], onDelete: Cascade)
   name                 String
   voiceId              String
-  personalityStyle     String   // "warm", "gentle", "cheerful", "calm"
-  engagementLevel      String   // "low", "medium", "high"
-  genderPresentation   String   // "feminine", "masculine", "neutral"
-  speakingStyle        String   // "simple", "conversational", "nurturing"
+  personalityPreset    PersonalityPreset @default(WARM_NURTURER)
   systemPromptOverride String?
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  portraitUrl          String?
+  idleLoopVideoUrl     String?
+  introAudioUrl        String?
+  avatarUnlocked       Boolean           @default(false)
+  sessionSilenceMs     Int               @default(45000)
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
 }
 
 model MemoryCard {
@@ -78,10 +87,11 @@ model DeviceToken {
   patientId  String
   patient    Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
   token      String    @unique @default(cuid())
-  deviceName String?
-  lastSeenAt DateTime?
-  revokedAt  DateTime?
-  createdAt  DateTime  @default(now())
+  deviceName     String?
+  expoPushToken  String?
+  lastSeenAt     DateTime?
+  revokedAt      DateTime?
+  createdAt      DateTime  @default(now())
 }
 
 model Conversation {

@@ -1,6 +1,6 @@
 // apps/patient-tablet/src/screens/PairingScreen.tsx
 import React, { useState } from 'react'
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native'
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native'
 import { saveDeviceToken } from '../storage/device-token'
 import { apiClient } from '../api/client'
 
@@ -9,16 +9,22 @@ interface Props { onPaired: () => void }
 export function PairingScreen({ onPaired }: Props) {
   const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handlePair = async () => {
-    if (code.length < 8) return
+    setError(null)
+    if (code.trim().length < 8) {
+      setError('Please enter the full 8-character code.')
+      return
+    }
     setLoading(true)
     try {
       const result = await apiClient.pairDevice(code.trim().toUpperCase())
       await saveDeviceToken(result.deviceToken, result.patientId)
       onPaired()
-    } catch {
-      Alert.alert('Invalid Code', 'Please check the code and try again.')
+    } catch (err: any) {
+      const isNetwork = err?.message === 'Network request failed' || err?.message?.includes('fetch')
+      setError(isNetwork ? 'Cannot reach server. Check your connection.' : 'Invalid code. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -31,12 +37,13 @@ export function PairingScreen({ onPaired }: Props) {
       <TextInput
         style={styles.input}
         value={code}
-        onChangeText={setCode}
+        onChangeText={t => { setCode(t); setError(null) }}
         placeholder="Enter code"
         autoCapitalize="characters"
         maxLength={8}
       />
-      <TouchableOpacity style={styles.button} onPress={handlePair} disabled={loading}>
+      {error && <Text style={styles.error}>{error}</Text>}
+      <TouchableOpacity style={[styles.button, loading && styles.buttonDisabled]} onPress={handlePair} disabled={loading}>
         <Text style={styles.buttonText}>{loading ? 'Connecting...' : 'Connect'}</Text>
       </TouchableOpacity>
     </View>
@@ -49,6 +56,8 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: 22, color: '#7A6355', marginBottom: 40, textAlign: 'center' },
   input: { fontSize: 32, borderWidth: 2, borderColor: '#C4A882', borderRadius: 12,
     padding: 16, width: 280, textAlign: 'center', letterSpacing: 8, backgroundColor: '#fff' },
+  error: { marginTop: 12, color: '#C0392B', fontSize: 18, textAlign: 'center' },
   button: { marginTop: 32, backgroundColor: '#8B5E3C', borderRadius: 12, paddingVertical: 18, paddingHorizontal: 48 },
+  buttonDisabled: { opacity: 0.6 },
   buttonText: { color: '#fff', fontSize: 24, fontWeight: '600' },
 })

@@ -21,6 +21,7 @@ export default function LoginPage() {
       const { accessToken, refreshToken } = res.data.data
       localStorage.setItem('access_token', accessToken)
       localStorage.setItem('refresh_token', refreshToken)
+      localStorage.setItem('caregiver_email', email)
       router.push(tab === 'register' ? '/onboarding' : '/dashboard')
     } catch (err: any) {
       const code = err.response?.data?.error?.code

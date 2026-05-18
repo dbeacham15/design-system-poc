@@ -2,7 +2,7 @@
 import { FastifyPluginAsync } from 'fastify'
 import { prisma } from '@dementia/db'
 import { deviceAuthHook } from '../middleware/device-auth'
-import { createVoiceSession } from '../services/voice-session.service'
+import { createVoiceSession, generateClosingLine } from '../services/voice-session.service'
 import { classifySafetyAlert, handleSafetyEvent } from '../services/safety.service'
 
 export const voiceSessionRoutes: FastifyPluginAsync = async (fastify) => {
@@ -14,6 +14,19 @@ export const voiceSessionRoutes: FastifyPluginAsync = async (fastify) => {
     } catch (err: any) {
       if (err.message === 'NO_COMPANION_CONFIGURED')
         return reply.status(400).send({ error: { code: 'NO_COMPANION', message: 'Companion not configured yet' } })
+      throw err
+    }
+  })
+
+  // Tablet calls this when session-level silence threshold is reached
+  fastify.post('/session/close', { preHandler: deviceAuthHook }, async (request, reply) => {
+    const patientId = (request as any).patientId as string
+    try {
+      const result = await generateClosingLine(patientId)
+      return reply.send({ data: result })
+    } catch (err: any) {
+      if (err.message === 'NO_COMPANION_CONFIGURED')
+        return reply.status(400).send({ error: { code: 'NO_COMPANION', message: 'Companion not configured' } })
       throw err
     }
   })

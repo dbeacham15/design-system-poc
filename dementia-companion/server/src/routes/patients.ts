@@ -95,4 +95,16 @@ export const patientRoutes: FastifyPluginAsync = async (fastify) => {
     await prisma.memoryCard.delete({ where: { id: cardId } })
     return reply.send({ data: { deleted: true } })
   })
+
+  fastify.get('/:id/conversations', async (request, reply) => {
+    const { id: patientId } = request.params as { id: string }
+    const { sub: caregiverId } = request.user as { sub: string }
+    if (!await assertPatientOwnership(patientId, caregiverId, reply)) return
+    const conversations = await prisma.conversation.findMany({
+      where: { patientId },
+      orderBy: { startedAt: 'desc' },
+      take: 20,
+    })
+    return reply.send({ data: conversations })
+  })
 }

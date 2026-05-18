@@ -19,9 +19,14 @@ export const apiClient = {
     }),
 
   createVoiceSession: (deviceToken: string) =>
-    request<{ sessionToken: string; conversationId: string; companionName: string }>(
-      '/api/voice/session', { method: 'POST', deviceToken }
-    ),
+    request<{
+      sessionToken: string
+      conversationId: string
+      companionName: string
+      sessionSilenceMs: number
+      simliSessionToken: string | null
+      idleLoopVideoUrl: string | null
+    }>('/api/voice/session', { method: 'POST', deviceToken }),
 
   getCaregiverMessages: (deviceToken: string) =>
     request<Array<{ id: string; fromName: string; message: string }>>('/api/messages/pending', {

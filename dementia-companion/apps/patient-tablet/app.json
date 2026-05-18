@@ -4,6 +4,11 @@
     "slug": "dementia-companion-tablet",
     "version": "1.0.0",
     "orientation": "landscape",
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
@@ -13,8 +18,15 @@
       }
     },
     "android": {
-      "adaptiveIcon": { "backgroundColor": "#ffffff" },
-      "permissions": ["RECORD_AUDIO"]
-    }
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      },
+      "permissions": [
+        "RECORD_AUDIO"
+      ]
+    },
+    "plugins": [
+      "expo-secure-store"
+    ]
   }
 }

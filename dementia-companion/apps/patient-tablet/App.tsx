@@ -25,5 +25,5 @@ export default function App() {
     }} />
   }
 
-  return <CompanionScreen deviceToken={deviceToken} />
+  return <CompanionScreen deviceToken={deviceToken} avatarUnlocked={true} />
 }

@@ -16,8 +16,15 @@ export async function build(opts: { logger?: boolean } = {}): Promise<FastifyIns
   const server = Fastify({ logger: opts.logger ?? true })
 
   await server.register(helmet)
+  const allowedOrigin = process.env.CAREGIVER_DASHBOARD_URL ?? 'http://localhost:3000'
   await server.register(cors, {
-    origin: process.env.CAREGIVER_DASHBOARD_URL ?? 'http://localhost:3000',
+    origin: (origin, cb) => {
+      if (!origin) return cb(null, true) // native mobile, curl, server-to-server
+      if (origin === allowedOrigin || /^http:\/\/localhost(:\d+)?$/.test(origin)) {
+        return cb(null, true)
+      }
+      cb(new Error('Not allowed by CORS'), false)
+    },
     credentials: true,
   })
   await server.register(jwt, {
