@@ -8,8 +8,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@dementia/db": "*",
-    "@dementia/types": "*",
+    "@dementia/db": "workspace:*",
+    "@dementia/types": "workspace:*",
     "@fastify/cors": "^9.0.0",
     "@fastify/helmet": "^11.0.0",
     "@fastify/jwt": "^8.0.0",
