@@ -9,7 +9,8 @@ export const deviceRoutes: FastifyPluginAsync = async (fastify) => {
     const { pairingCode, deviceName } = request.body as { pairingCode: string; deviceName?: string }
     try {
       const result = await redeemPairingCode(pairingCode, deviceName)
-      return reply.send({ data: result })
+      const companion = await prisma.companion.findUnique({ where: { patientId: result.patientId } })
+      return reply.send({ data: { ...result, avatarUnlocked: companion?.avatarUnlocked ?? false } })
     } catch {
       return reply.status(404).send({ error: { code: 'INVALID_CODE', message: 'Pairing code not found or expired' } })
     }

@@ -4,7 +4,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-nativ
 import { saveDeviceToken } from '../storage/device-token'
 import { apiClient } from '../api/client'
 
-interface Props { onPaired: () => void }
+interface Props { onPaired: (avatarUnlocked: boolean) => void }
 
 export function PairingScreen({ onPaired }: Props) {
   const [code, setCode] = useState('')
@@ -21,7 +21,7 @@ export function PairingScreen({ onPaired }: Props) {
     try {
       const result = await apiClient.pairDevice(code.trim().toUpperCase())
       await saveDeviceToken(result.deviceToken, result.patientId)
-      onPaired()
+      onPaired(result.avatarUnlocked)
     } catch (err: any) {
       const isNetwork = err?.message === 'Network request failed' || err?.message?.includes('fetch')
       setError(isNetwork ? 'Cannot reach server. Check your connection.' : 'Invalid code. Please try again.')
@@ -38,9 +38,11 @@ export function PairingScreen({ onPaired }: Props) {
         style={styles.input}
         value={code}
         onChangeText={t => { setCode(t); setError(null) }}
+        onSubmitEditing={handlePair}
         placeholder="Enter code"
         autoCapitalize="characters"
         maxLength={8}
+        returnKeyType="go"
       />
       {error && <Text style={styles.error}>{error}</Text>}
       <TouchableOpacity style={[styles.button, loading && styles.buttonDisabled]} onPress={handlePair} disabled={loading}>

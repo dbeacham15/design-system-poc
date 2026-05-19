@@ -6,6 +6,7 @@ import { CompanionScreen } from './src/screens/CompanionScreen'
 
 export default function App() {
   const [deviceToken, setDeviceToken] = useState<string | null>(null)
+  const [avatarUnlocked, setAvatarUnlocked] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -18,12 +19,13 @@ export default function App() {
   if (loading) return null
 
   if (!deviceToken) {
-    return <PairingScreen onPaired={() => {
+    return <PairingScreen onPaired={(unlocked) => {
+      setAvatarUnlocked(unlocked)
       getDeviceToken().then(result => {
         if (result) setDeviceToken(result.token)
       })
     }} />
   }
 
-  return <CompanionScreen deviceToken={deviceToken} avatarUnlocked={true} />
+  return <CompanionScreen deviceToken={deviceToken} avatarUnlocked={avatarUnlocked} />
 }
