@@ -9,6 +9,7 @@ import { createSimliAdapter, TalkingHeadError } from '../services/talking-head'
 const EXPO_PUSH_URL = 'https://exp.host/--/api/v2/push/send'
 
 const VALID_PRESETS = Object.values(PersonalityPreset)
+const VALID_VOICE_IDS = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']
 
 const PORTRAIT_GUARDRAILS = `
 Pixar-adjacent warm illustration style. Clear, detailed facial features suitable for real-time talking head animation.
@@ -63,6 +64,11 @@ export const companionRoutes: FastifyPluginAsync = async (fastify) => {
     if (!VALID_PRESETS.includes(personalityPreset)) {
       return reply.status(400).send({
         error: { code: 'INVALID_PRESET', message: `personalityPreset must be one of: ${VALID_PRESETS.join(', ')}` },
+      })
+    }
+    if (!VALID_VOICE_IDS.includes(voiceId)) {
+      return reply.status(400).send({
+        error: { code: 'INVALID_VOICE', message: `voiceId must be one of: ${VALID_VOICE_IDS.join(', ')}` },
       })
     }
 
@@ -134,6 +140,9 @@ export const companionRoutes: FastifyPluginAsync = async (fastify) => {
     if (!portraitUrl || typeof portraitUrl !== 'string') {
       return reply.status(400).send({ error: { code: 'INVALID_INPUT', message: 'portraitUrl is required' } })
     }
+    if (!portraitUrl.startsWith('https://')) {
+      return reply.status(400).send({ error: { code: 'INVALID_INPUT', message: 'portraitUrl must be an https URL' } })
+    }
 
     // Validate the portrait is animatable via talking head adapter.
     // Skip validation in dev when SIMLI_API_KEY is absent — idle loop and live sessions
@@ -199,7 +208,9 @@ export const companionRoutes: FastifyPluginAsync = async (fastify) => {
           type: 'COMPANION_INTRO',
           companionId: companion.id,
           companionName: companion.name,
-          introAudioUrl: companion.introAudioUrl ?? null,
+          // Omit base64 data URLs — Expo push payload limit is 4 KB.
+          // Once introAudioUrl is a real hosted URL (S3/GCS), this will pass through.
+          introAudioUrl: companion.introAudioUrl?.startsWith('data:') ? null : (companion.introAudioUrl ?? null),
         },
         sound: 'default',
       }),

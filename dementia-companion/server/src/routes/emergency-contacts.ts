@@ -34,7 +34,11 @@ export const emergencyContactRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.delete('/:id', async (request, reply) => {
     const { id } = request.params as { id: string }
-    await prisma.emergencyContact.delete({ where: { id } })
+    const { sub: caregiverId } = request.user as { sub: string }
+    const deleted = await prisma.emergencyContact.deleteMany({ where: { id, caregiverId } })
+    if (deleted.count === 0) {
+      return reply.status(404).send({ error: { code: 'NOT_FOUND', message: 'Contact not found' } })
+    }
     return reply.send({ data: { deleted: true } })
   })
 }

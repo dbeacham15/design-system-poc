@@ -42,14 +42,13 @@ export function useTalkingHead({ simliSessionToken, companionStream, active }: O
 
     // 3-second hard deadline — fall back to orb if Simli stream not up by then
     timeoutRef.current = setTimeout(() => {
-      if (status !== 'live') {
-        setStatus('error')
-      }
+      setStatus('error')
     }, STREAM_TIMEOUT_MS)
 
     connectToSimli(simliSessionToken, companionStream)
-      .then((stream) => {
+      .then(({ pc, stream }) => {
         clearTimeout(timeoutRef.current!)
+        pcRef.current = pc
         setVideoStream(stream)
         setStatus('live')
       })
@@ -74,7 +73,7 @@ export function useTalkingHead({ simliSessionToken, companionStream, active }: O
 async function connectToSimli(
   sessionToken: string,
   companionStream: MediaStream | null,
-): Promise<MediaStream> {
+): Promise<{ pc: RTCPeerConnection; stream: MediaStream }> {
   // 1. Ask Simli for its SDP offer
   const offerRes = await fetch(SIMLI_SESSION_URL, {
     method: 'POST',
@@ -118,5 +117,5 @@ async function connectToSimli(
     body: JSON.stringify({ session_token: sessionToken, sdp: answer.sdp }),
   })
 
-  return videoStream
+  return { pc, stream: videoStream }
 }

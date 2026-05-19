@@ -55,6 +55,13 @@ export const voiceSessionRoutes: FastifyPluginAsync = async (fastify) => {
       }
       const patientId = (request as any).patientId as string
 
+      const conversation = await prisma.conversation.findFirst({
+        where: { id: conversationId, patientId },
+      })
+      if (!conversation) {
+        return reply.status(404).send({ error: { code: 'NOT_FOUND', message: 'Conversation not found' } })
+      }
+
       await prisma.conversationTurn.create({
         data: { conversationId, role, content: text },
       })

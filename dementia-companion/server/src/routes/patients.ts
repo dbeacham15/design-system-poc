@@ -92,7 +92,10 @@ export const patientRoutes: FastifyPluginAsync = async (fastify) => {
     const { id: patientId, cardId } = request.params as { id: string; cardId: string }
     const { sub: caregiverId } = request.user as { sub: string }
     if (!await assertPatientOwnership(patientId, caregiverId, reply)) return
-    await prisma.memoryCard.delete({ where: { id: cardId } })
+    const deleted = await prisma.memoryCard.deleteMany({ where: { id: cardId, patientId } })
+    if (deleted.count === 0) {
+      return reply.status(404).send({ error: { code: 'NOT_FOUND', message: 'Memory card not found' } })
+    }
     return reply.send({ data: { deleted: true } })
   })
 
