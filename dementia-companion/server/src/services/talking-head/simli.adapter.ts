@@ -38,9 +38,9 @@ export class SimliAdapter implements TalkingHeadAdapter {
       throw new TalkingHeadError(`Simli validateFace returned ${response.status}: ${body}`)
     }
 
-    const data = await response.json().catch(() => ({}))
-    const valid = data.valid === true || data.status === 'ok'
-    return { valid, reason: valid ? undefined : (data.reason ?? 'Face not detected or not animatable') }
+    const data = await response.json().catch(() => ({})) as Record<string, unknown>
+    const valid = data['valid'] === true || data['status'] === 'ok'
+    return { valid, reason: valid ? undefined : ((data['reason'] as string | undefined) ?? 'Face not detected or not animatable') }
   }
 
   async createLiveSession(portraitUrl: string): Promise<LiveSessionResult> {
@@ -60,14 +60,14 @@ export class SimliAdapter implements TalkingHeadAdapter {
       throw new TalkingHeadError(`Simli startFaceSession returned ${response.status}: ${body}`)
     }
 
-    const data = await response.json().catch(() => null)
-    if (!data?.session_token) {
+    const data = await response.json().catch(() => null) as Record<string, unknown> | null
+    if (!data?.['session_token']) {
       throw new TalkingHeadError('Simli startFaceSession response missing session_token')
     }
 
     return {
-      sessionToken: data.session_token,
-      metadata: { sessionId: data.session_id ?? null },
+      sessionToken: data['session_token'] as string,
+      metadata: { sessionId: (data['session_id'] as string | null) ?? null },
     }
   }
 
@@ -93,12 +93,12 @@ export class SimliAdapter implements TalkingHeadAdapter {
       throw new TalkingHeadError(`Simli generateIdleVideo returned ${response.status}: ${body}`)
     }
 
-    const data = await response.json().catch(() => null)
-    if (!data?.videoUrl) {
+    const data = await response.json().catch(() => null) as Record<string, unknown> | null
+    if (!data?.['videoUrl']) {
       throw new TalkingHeadError('Simli response missing videoUrl')
     }
 
-    return { videoUrl: data.videoUrl, durationSeconds: data.durationSeconds ?? 8 }
+    return { videoUrl: data['videoUrl'] as string, durationSeconds: (data['durationSeconds'] as number | undefined) ?? 8 }
   }
 }
 
