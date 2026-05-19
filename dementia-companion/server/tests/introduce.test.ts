@@ -77,14 +77,18 @@ beforeEach(async () => {
 })
 
 describe('POST /api/companions/:companionId/introduce', () => {
-  it('returns 400 if tablet has no push token registered', async () => {
+  it('succeeds without a push token (web mode) and sets avatarUnlocked=true', async () => {
     const res = await server.inject({
       method: 'POST',
       url: `/api/companions/${companionId}/introduce`,
       headers: { authorization: `Bearer ${authToken}` },
     })
-    expect(res.statusCode).toBe(400)
-    expect(res.json().error.code).toBe('NO_PUSH_TOKEN')
+    expect(res.statusCode).toBe(200)
+    expect(res.json().data.introduced).toBe(true)
+    expect(res.json().data.pushSent).toBe(false)
+
+    const companion = await prisma.companion.findUnique({ where: { id: companionId } })
+    expect(companion?.avatarUnlocked).toBe(true)
   })
 
   it('sends push notification and sets avatarUnlocked=true', async () => {

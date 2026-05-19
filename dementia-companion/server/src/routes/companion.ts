@@ -191,40 +191,37 @@ export const companionRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.status(409).send({ error: { code: 'ALREADY_INTRODUCED', message: 'Companion has already been introduced' } })
     }
 
-    const deviceToken = companion.patient.deviceTokens.find(dt => dt.expoPushToken && !dt.revokedAt)
-    if (!deviceToken?.expoPushToken) {
-      return reply.status(400).send({ error: { code: 'NO_PUSH_TOKEN', message: 'Tablet has not registered a push token' } })
-    }
-
-    // Send push notification to the paired tablet
-    const pushRes = await fetch(EXPO_PUSH_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({
-        to: deviceToken.expoPushToken,
-        title: `Meet ${companion.name}`,
-        body: `Your companion ${companion.name} is ready to say hello.`,
-        data: {
-          type: 'COMPANION_INTRO',
-          companionId: companion.id,
-          companionName: companion.name,
-          // Omit base64 data URLs — Expo push payload limit is 4 KB.
-          // Once introAudioUrl is a real hosted URL (S3/GCS), this will pass through.
-          introAudioUrl: companion.introAudioUrl?.startsWith('data:') ? null : (companion.introAudioUrl ?? null),
-        },
-        sound: 'default',
-      }),
-    })
-
-    if (!pushRes.ok) {
-      const body = await pushRes.text().catch(() => '')
-      return reply.status(502).send({ error: { code: 'PUSH_FAILED', message: `Push delivery failed: ${body}` } })
-    }
-
-    // Mark avatar as unlocked — push delivery to Expo servers is the acknowledgement
+    // Mark avatar as unlocked first — this is the source of truth.
+    // Push notification is best-effort: on native the tablet receives it and plays
+    // the intro animation; on web (no push token) the tablet polls for the state change.
     await prisma.companion.update({ where: { id: companion.id }, data: { avatarUnlocked: true } })
 
-    return reply.send({ data: { introduced: true, companionName: companion.name } })
+    const deviceToken = companion.patient.deviceTokens.find(dt => dt.expoPushToken && !dt.revokedAt)
+    let pushSent = false
+
+    if (deviceToken?.expoPushToken) {
+      const pushRes = await fetch(EXPO_PUSH_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          to: deviceToken.expoPushToken,
+          title: `Meet ${companion.name}`,
+          body: `Your companion ${companion.name} is ready to say hello.`,
+          data: {
+            type: 'COMPANION_INTRO',
+            companionId: companion.id,
+            companionName: companion.name,
+            // Omit base64 data URLs — Expo push payload limit is 4 KB.
+            // Once introAudioUrl is a real hosted URL (S3/GCS), this will pass through.
+            introAudioUrl: companion.introAudioUrl?.startsWith('data:') ? null : (companion.introAudioUrl ?? null),
+          },
+          sound: 'default',
+        }),
+      }).catch(() => null)
+      pushSent = pushRes?.ok ?? false
+    }
+
+    return reply.send({ data: { introduced: true, companionName: companion.name, pushSent } })
   })
 }
 

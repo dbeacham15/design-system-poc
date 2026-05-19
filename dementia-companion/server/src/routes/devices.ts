@@ -16,6 +16,13 @@ export const deviceRoutes: FastifyPluginAsync = async (fastify) => {
     }
   })
 
+  // Tablet polls this to detect introduction without push notifications (web mode)
+  fastify.get('/status', { preHandler: deviceAuthHook }, async (request, reply) => {
+    const patientId = (request as any).patientId as string
+    const companion = await prisma.companion.findUnique({ where: { patientId } })
+    return reply.send({ data: { avatarUnlocked: companion?.avatarUnlocked ?? false } })
+  })
+
   // Tablet registers its Expo push token after pairing
   fastify.patch('/push-token', { preHandler: deviceAuthHook }, async (request, reply) => {
     const { expoPushToken } = request.body as { expoPushToken: string }
