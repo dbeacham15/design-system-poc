@@ -4,7 +4,14 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-nativ
 import { saveDeviceToken } from '../storage/device-token'
 import { apiClient } from '../api/client'
 
-interface Props { onPaired: (avatarUnlocked: boolean) => void }
+interface PairedResult {
+  avatarUnlocked: boolean
+  idleLoopVideoUrl: string | null
+  companionName: string | null
+  introAudioUrl: string | null
+}
+
+interface Props { onPaired: (result: PairedResult) => void }
 
 export function PairingScreen({ onPaired }: Props) {
   const [code, setCode] = useState('')
@@ -21,7 +28,12 @@ export function PairingScreen({ onPaired }: Props) {
     try {
       const result = await apiClient.pairDevice(code.trim().toUpperCase())
       await saveDeviceToken(result.deviceToken, result.patientId)
-      onPaired(result.avatarUnlocked)
+      onPaired({
+        avatarUnlocked: result.avatarUnlocked,
+        idleLoopVideoUrl: result.idleLoopVideoUrl,
+        companionName: result.companionName,
+        introAudioUrl: result.introAudioUrl,
+      })
     } catch (err: any) {
       const isNetwork = err?.message === 'Network request failed' || err?.message?.includes('fetch')
       setError(isNetwork ? 'Cannot reach server. Check your connection.' : 'Invalid code. Please try again.')

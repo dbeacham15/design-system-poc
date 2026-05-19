@@ -7,9 +7,21 @@ import { CompanionScreen } from './src/screens/CompanionScreen'
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3001'
 const POLL_INTERVAL_MS = 4000
 
+interface CompanionSnapshot {
+  avatarUnlocked: boolean
+  idleLoopVideoUrl: string | null
+  companionName: string | null
+  introAudioUrl: string | null
+}
+
 export default function App() {
   const [deviceToken, setDeviceToken] = useState<string | null>(null)
-  const [avatarUnlocked, setAvatarUnlocked] = useState(false)
+  const [snapshot, setSnapshot] = useState<CompanionSnapshot>({
+    avatarUnlocked: false,
+    idleLoopVideoUrl: null,
+    companionName: null,
+    introAudioUrl: null,
+  })
   const [loading, setLoading] = useState(true)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -20,9 +32,9 @@ export default function App() {
     })
   }, [])
 
-  // Poll for avatarUnlocked when paired but not yet introduced (web has no push)
+  // Poll for introduction when paired but avatar not yet unlocked (web has no push)
   useEffect(() => {
-    if (!deviceToken || avatarUnlocked) {
+    if (!deviceToken || snapshot.avatarUnlocked) {
       if (pollRef.current) clearInterval(pollRef.current)
       return
     }
@@ -32,22 +44,44 @@ export default function App() {
           headers: { 'x-device-token': deviceToken },
         })
         const json = await res.json()
-        if (json.data?.avatarUnlocked) setAvatarUnlocked(true)
+        if (json.data?.avatarUnlocked) {
+          setSnapshot({
+            avatarUnlocked: true,
+            idleLoopVideoUrl: json.data.idleLoopVideoUrl ?? null,
+            companionName: json.data.companionName ?? null,
+            introAudioUrl: json.data.introAudioUrl ?? null,
+          })
+        }
       } catch {}
     }, POLL_INTERVAL_MS)
     return () => { if (pollRef.current) clearInterval(pollRef.current) }
-  }, [deviceToken, avatarUnlocked])
+  }, [deviceToken, snapshot.avatarUnlocked])
 
   if (loading) return null
 
   if (!deviceToken) {
-    return <PairingScreen onPaired={(unlocked) => {
-      setAvatarUnlocked(unlocked)
-      getDeviceToken().then(result => {
-        if (result) setDeviceToken(result.token)
-      })
-    }} />
+    return (
+      <PairingScreen
+        onPaired={(result) => {
+          setSnapshot({
+            avatarUnlocked: result.avatarUnlocked,
+            idleLoopVideoUrl: result.idleLoopVideoUrl,
+            companionName: result.companionName,
+            introAudioUrl: result.introAudioUrl,
+          })
+          getDeviceToken().then(r => { if (r) setDeviceToken(r.token) })
+        }}
+      />
+    )
   }
 
-  return <CompanionScreen deviceToken={deviceToken} avatarUnlocked={avatarUnlocked} />
+  return (
+    <CompanionScreen
+      deviceToken={deviceToken}
+      avatarUnlocked={snapshot.avatarUnlocked}
+      initialCompanionName={snapshot.companionName}
+      initialIdleLoopVideoUrl={snapshot.idleLoopVideoUrl}
+      initialIntroAudioUrl={snapshot.introAudioUrl}
+    />
+  )
 }

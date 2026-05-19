@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import api from '../../../lib/api'
 import { CompanionAvatar } from '../../../components/CompanionAvatar'
+import { AvatarPreviewModal } from '../../../components/AvatarPreviewModal'
 
 const VOICES = [
   { id: 'alloy', label: 'Alloy', description: 'Calm and neutral' },
@@ -21,6 +22,7 @@ export default function PatientPage() {
   const qc = useQueryClient()
   const [pairingCode, setPairingCode] = useState<string | null>(null)
   const [generatingCode, setGeneratingCode] = useState(false)
+  const [showPreviewModal, setShowPreviewModal] = useState(false)
 
   const { data: patients, isLoading } = useQuery({
     queryKey: ['patients'],
@@ -28,10 +30,18 @@ export default function PatientPage() {
   })
   const patient = patients?.[0]
 
+  const assetsReady = (c: any) => !!c?.idleLoopVideoUrl && !!c?.introAudioUrl
+
   const { data: companion, refetch: refetchCompanion } = useQuery({
     queryKey: ['companion', patient?.id],
     queryFn: () => api.get(`/api/patients/${patient.id}/companion`).then(r => r.data.data),
     enabled: !!patient?.id,
+    // Poll quickly while portrait is approved but assets are still generating
+    refetchInterval: (query) => {
+      const c = query.state.data
+      if (c?.portraitUrl && !assetsReady(c) && !c?.avatarUnlocked) return 3_000
+      return false
+    },
   })
 
   const { data: conversations } = useQuery({
@@ -94,6 +104,7 @@ export default function PatientPage() {
             <CompanionAvatar
               companion={companion}
               patientName={patient.name}
+              onIntroduce={() => setShowPreviewModal(true)}
               onUnlocked={() => refetchCompanion()}
             />
           )}
@@ -201,6 +212,23 @@ export default function PatientPage() {
             <span className="text-sm text-green-600">Saved</span>
           )}
         </section>
+      )}
+
+      {showPreviewModal && companion?.idleLoopVideoUrl && companion?.introAudioUrl && (
+        <AvatarPreviewModal
+          companion={{
+            id: companion.id,
+            name: companion.name,
+            idleLoopVideoUrl: companion.idleLoopVideoUrl,
+            introAudioUrl: companion.introAudioUrl,
+          }}
+          patientName={patient.name}
+          onSuccess={() => {
+            setShowPreviewModal(false)
+            refetchCompanion()
+          }}
+          onClose={() => setShowPreviewModal(false)}
+        />
       )}
     </div>
   )

@@ -212,8 +212,9 @@ export const companionRoutes: FastifyPluginAsync = async (fastify) => {
             companionId: companion.id,
             companionName: companion.name,
             // Omit base64 data URLs — Expo push payload limit is 4 KB.
-            // Once introAudioUrl is a real hosted URL (S3/GCS), this will pass through.
+            // Once these are real hosted URLs (S3/GCS), they will pass through.
             introAudioUrl: companion.introAudioUrl?.startsWith('data:') ? null : (companion.introAudioUrl ?? null),
+            idleLoopVideoUrl: companion.idleLoopVideoUrl ?? null,
           },
           sound: 'default',
         }),

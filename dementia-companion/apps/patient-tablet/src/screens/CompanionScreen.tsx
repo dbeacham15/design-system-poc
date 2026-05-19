@@ -18,16 +18,27 @@ import { usePushNotifications } from '../hooks/usePushNotifications'
 interface Props {
   deviceToken: string
   avatarUnlocked: boolean
+  initialCompanionName?: string | null
+  initialIdleLoopVideoUrl?: string | null
+  initialIntroAudioUrl?: string | null
 }
 
 const AVATAR_SIZE = Math.min(Dimensions.get('window').width * 0.72, 340)
 const GLOW_SIZE = AVATAR_SIZE + 32
 
-export function CompanionScreen({ deviceToken, avatarUnlocked: initialUnlocked }: Props) {
+export function CompanionScreen({
+  deviceToken,
+  avatarUnlocked: initialUnlocked,
+  initialCompanionName,
+  initialIdleLoopVideoUrl,
+  initialIntroAudioUrl,
+}: Props) {
   useKeepAwake()
 
   const [avatarUnlocked, setAvatarUnlocked] = useState(initialUnlocked)
   const [introducing, setIntroducing] = useState(false)
+  // Stores idleLoopVideoUrl received via push notification intro payload
+  const [introIdleLoopVideoUrl, setIntroIdleLoopVideoUrl] = useState<string | null>(null)
   const introAudioRef = useRef<HTMLAudioElement | null>(null)
 
   // Video refs for the circular masked player
@@ -43,9 +54,15 @@ export function CompanionScreen({ deviceToken, avatarUnlocked: initialUnlocked }
   }, [])
 
   const {
-    state, companionName, companionStream, simliSessionToken, idleLoopVideoUrl,
+    state, companionName: sessionCompanionName, companionStream, simliSessionToken,
+    idleLoopVideoUrl: sessionIdleLoopVideoUrl,
     startSession, triggerClosingRitual, dismissError,
   } = useVoiceSession(deviceToken)
+
+  // Priority: live session > push intro payload > initial props from App.tsx
+  const companionName = sessionCompanionName || initialCompanionName || ''
+  const idleLoopVideoUrl = sessionIdleLoopVideoUrl || introIdleLoopVideoUrl || initialIdleLoopVideoUrl || null
+
 
   const { status: talkingHeadStatus, videoStream } = useTalkingHead({
     simliSessionToken,
@@ -72,9 +89,11 @@ export function CompanionScreen({ deviceToken, avatarUnlocked: initialUnlocked }
 
   const handleCompanionIntro = useCallback(async ({
     introAudioUrl,
-  }: { companionName: string; introAudioUrl: string | null }) => {
+    idleLoopVideoUrl: payloadIdleLoopVideoUrl,
+  }: { companionName: string; introAudioUrl: string | null; idleLoopVideoUrl: string | null }) => {
     if (avatarUnlocked || introducing) return
     setIntroducing(true)
+    if (payloadIdleLoopVideoUrl) setIntroIdleLoopVideoUrl(payloadIdleLoopVideoUrl)
 
     if (introAudioUrl) {
       await new Promise<void>((resolve) => {
@@ -91,6 +110,20 @@ export function CompanionScreen({ deviceToken, avatarUnlocked: initialUnlocked }
   }, [avatarUnlocked, introducing])
 
   usePushNotifications({ deviceToken, onCompanionIntro: handleCompanionIntro })
+
+  // Web polling path: when App.tsx detects introduction via poll, the prop flips to true.
+  // useState(initialUnlocked) doesn't re-sync after mount, so we watch the prop explicitly.
+  useEffect(() => {
+    if (initialUnlocked && !avatarUnlocked && !introducing) {
+      handleCompanionIntro({
+        companionName: initialCompanionName ?? '',
+        introAudioUrl: initialIntroAudioUrl ?? null,
+        idleLoopVideoUrl: initialIdleLoopVideoUrl ?? null,
+      })
+    }
+  // Deliberately narrow dep: only fire when the prop transitions to true
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialUnlocked])
 
   const glowAnim = useRef(new Animated.Value(0)).current
 

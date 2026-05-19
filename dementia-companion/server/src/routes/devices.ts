@@ -10,17 +10,41 @@ export const deviceRoutes: FastifyPluginAsync = async (fastify) => {
     try {
       const result = await redeemPairingCode(pairingCode, deviceName)
       const companion = await prisma.companion.findUnique({ where: { patientId: result.patientId } })
-      return reply.send({ data: { ...result, avatarUnlocked: companion?.avatarUnlocked ?? false } })
+      const introAudioUrl = companion?.introAudioUrl?.startsWith('data:')
+        ? null
+        : (companion?.introAudioUrl ?? null)
+      return reply.send({
+        data: {
+          ...result,
+          avatarUnlocked: companion?.avatarUnlocked ?? false,
+          idleLoopVideoUrl: companion?.idleLoopVideoUrl ?? null,
+          companionName: companion?.name ?? null,
+          introAudioUrl,
+        },
+      })
     } catch {
       return reply.status(404).send({ error: { code: 'INVALID_CODE', message: 'Pairing code not found or expired' } })
     }
   })
 
-  // Tablet polls this to detect introduction without push notifications (web mode)
+  // Tablet polls this to detect introduction without push notifications (web mode).
+  // Returns a companion snapshot so the tablet can transition orb→avatar immediately.
   fastify.get('/status', { preHandler: deviceAuthHook }, async (request, reply) => {
     const patientId = (request as any).patientId as string
     const companion = await prisma.companion.findUnique({ where: { patientId } })
-    return reply.send({ data: { avatarUnlocked: companion?.avatarUnlocked ?? false } })
+    // Omit base64 data URLs from the response — they are too large to pass as props
+    // and will be replaced with hosted URLs before production.
+    const introAudioUrl = companion?.introAudioUrl?.startsWith('data:')
+      ? null
+      : (companion?.introAudioUrl ?? null)
+    return reply.send({
+      data: {
+        avatarUnlocked: companion?.avatarUnlocked ?? false,
+        idleLoopVideoUrl: companion?.idleLoopVideoUrl ?? null,
+        companionName: companion?.name ?? null,
+        introAudioUrl,
+      },
+    })
   })
 
   // Tablet registers its Expo push token after pairing

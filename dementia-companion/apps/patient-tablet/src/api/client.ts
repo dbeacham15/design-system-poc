@@ -13,7 +13,14 @@ async function request<T>(path: string, options: RequestInit & { deviceToken?: s
 
 export const apiClient = {
   pairDevice: (code: string) =>
-    request<{ deviceToken: string; patientId: string; avatarUnlocked: boolean }>('/api/devices/pair', {
+    request<{
+      deviceToken: string
+      patientId: string
+      avatarUnlocked: boolean
+      idleLoopVideoUrl: string | null
+      companionName: string | null
+      introAudioUrl: string | null
+    }>('/api/devices/pair', {
       method: 'POST',
       body: JSON.stringify({ pairingCode: code }),
     }),

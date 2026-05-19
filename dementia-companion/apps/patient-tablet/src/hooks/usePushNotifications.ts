@@ -16,6 +16,7 @@ Notifications.setNotificationHandler({
 export interface CompanionIntroPayload {
   companionName: string
   introAudioUrl: string | null
+  idleLoopVideoUrl: string | null
 }
 
 interface Options {
@@ -58,6 +59,7 @@ export function usePushNotifications({ deviceToken, onCompanionIntro }: Options)
           onIntroRef.current({
             companionName: data.companionName ?? '',
             introAudioUrl: data.introAudioUrl ?? null,
+            idleLoopVideoUrl: data.idleLoopVideoUrl ?? null,
           })
         }
       })
@@ -69,6 +71,7 @@ export function usePushNotifications({ deviceToken, onCompanionIntro }: Options)
           onIntroRef.current({
             companionName: data.companionName ?? '',
             introAudioUrl: data.introAudioUrl ?? null,
+            idleLoopVideoUrl: data.idleLoopVideoUrl ?? null,
           })
         }
       })
