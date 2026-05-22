@@ -158,7 +158,7 @@ Expected: All pass.
 
 2. Stage and commit:
 ```bash
-git add design-system-poc/src/components/Button/
+git add src/components/Button/
 git commit -m "feat(design-system-poc): add Button component from Figma design"
 ```
 
