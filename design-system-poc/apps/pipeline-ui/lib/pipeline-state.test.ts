@@ -112,4 +112,10 @@ describe('transition', () => {
     expect(s.stage).toBe('grilling')
     expect(s.buildStatuses).toEqual([])
   })
+
+  it('BUILD_FAIL stores the error message in buildError', () => {
+    const building = { ...createAppState(), stage: 'building' as const }
+    const s = transition(building, { type: 'BUILD_FAIL', error: 'Tests failed' })
+    expect(s.buildError).toBe('Tests failed')
+  })
 })

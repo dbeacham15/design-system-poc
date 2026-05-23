@@ -120,17 +120,23 @@ export function Playground() {
   const name = state.selectedComponent
 
   const [Component, setComponent] = useState<React.ComponentType<Record<string, unknown>> | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [propValues, setPropValues] = useState<Record<string, unknown>>({})
   const [prLoading, setPrLoading] = useState(false)
   const [prError, setPrError] = useState<string | null>(null)
 
   // Load component from registry when name changes
   useEffect(() => {
+    let cancelled = false
     if (!name) { setComponent(null); return }
+    setLoadError(null)
     const loader = componentRegistry[name]
-    if (!loader) { setComponent(null); return }
+    if (!loader) { setLoadError(`No registry entry for "${name}". Build it first.`); return }
     setComponent(null)
-    loader().then(mod => setComponent(() => mod.default)).catch(() => setComponent(null))
+    loader()
+      .then(mod => { if (!cancelled) setComponent(() => mod.default) })
+      .catch(err => { if (!cancelled) setLoadError(String(err)) })
+    return () => { cancelled = true }
   }, [name])
 
   // Initialize prop values from PropSurface when it changes
@@ -201,7 +207,16 @@ export function Playground() {
   // -------------------------------------------------------------------------
   // Playground state
   // -------------------------------------------------------------------------
-  const props = state.propSurface?.props ?? []
+  const surface = state.propSurface
+  const editableProps = surface
+    ? surface.props.filter(p =>
+        p.name !== 'children' &&
+        p.name !== 'onClick' &&
+        !p.type.startsWith('(') &&
+        !p.type.includes('=>')
+      )
+    : []
+  const props = editableProps
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#111' }}>
@@ -215,16 +230,18 @@ export function Playground() {
           {name ?? 'No component'}
         </span>
         <div style={{ flex: 1 }} />
-        <button
-          onClick={() => dispatch({ type: 'OPEN_CHAT' })}
-          style={{
-            padding: '5px 12px', fontSize: 12,
-            background: '#1a1a1a', color: '#ccc',
-            border: '1px solid #333', borderRadius: 6, cursor: 'pointer',
-          }}
-        >
-          Edit
-        </button>
+        {!state.chatOpen && (
+          <button
+            onClick={() => dispatch({ type: 'OPEN_CHAT' })}
+            style={{
+              padding: '5px 12px', fontSize: 12,
+              background: '#1a1a1a', color: '#ccc',
+              border: '1px solid #333', borderRadius: 6, cursor: 'pointer',
+            }}
+          >
+            Edit
+          </button>
+        )}
         {state.commitSha && state.preBuildSha && !state.prUrl && (
           <button
             onClick={handleCreatePr}
@@ -269,10 +286,10 @@ export function Playground() {
       }}>
         {!name ? (
           <span style={{ color: '#555', fontSize: 14 }}>No component selected</span>
+        ) : loadError ? (
+          <span style={{ color: '#f87171', fontSize: 14 }}>{loadError}</span>
         ) : !Component ? (
-          <span style={{ color: '#555', fontSize: 14 }}>
-            {componentRegistry[name] ? 'Loading…' : `"${name}" not in registry`}
-          </span>
+          <span style={{ color: '#555', fontSize: 14 }}>Loading…</span>
         ) : (
           <Component {...propValues} />
         )}

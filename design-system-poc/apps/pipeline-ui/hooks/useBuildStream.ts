@@ -10,17 +10,19 @@ export function useBuildStream() {
     if (hasStarted.current) return
     if (!state.propSurface) return
     hasStarted.current = true
+    let cancelled = false
+    const propSurface = state.propSurface // snapshot to avoid stale closure
 
     async function runStream() {
       try {
         const res = await fetch('/api/build', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ propSurface: state.propSurface }),
+          body: JSON.stringify({ propSurface }),
         })
 
         if (!res.ok || !res.body) {
-          dispatch({ type: 'BUILD_FAIL', error: 'Build failed to start.' })
+          if (!cancelled) dispatch({ type: 'BUILD_FAIL', error: 'Build failed to start.' })
           return
         }
 
@@ -31,6 +33,7 @@ export function useBuildStream() {
         while (true) {
           const { done, value } = await reader.read()
           if (done) break
+          if (cancelled) { reader.cancel(); break }
           buffer += decoder.decode(value, { stream: true })
           const lines = buffer.split('\n')
           buffer = lines.pop() ?? ''
@@ -39,23 +42,18 @@ export function useBuildStream() {
             if (!line.startsWith('data: ')) continue
             try {
               const parsed = JSON.parse(line.slice(6))
-              if (parsed.status) {
-                dispatch({ type: 'BUILD_STATUS', message: parsed.status })
-              }
-              if (parsed.error) {
-                dispatch({ type: 'BUILD_FAIL', error: parsed.error })
-              }
-              if (parsed.done) {
-                dispatch({ type: 'BUILD_SUCCESS', commitSha: parsed.commitSha, preBuildSha: parsed.preBuildSha })
-              }
+              if (parsed.status && !cancelled) dispatch({ type: 'BUILD_STATUS', message: parsed.status })
+              if (parsed.error && !cancelled) dispatch({ type: 'BUILD_FAIL', error: parsed.error })
+              if (parsed.done && !cancelled) dispatch({ type: 'BUILD_SUCCESS', commitSha: parsed.commitSha, preBuildSha: parsed.preBuildSha })
             } catch {}
           }
         }
       } catch (err) {
-        dispatch({ type: 'BUILD_FAIL', error: String(err) })
+        if (!cancelled) dispatch({ type: 'BUILD_FAIL', error: String(err) })
       }
     }
 
     runStream()
-  }, [state.stage, state.propSurface, dispatch])
+    return () => { cancelled = true }
+  }, [state.stage, dispatch]) // removed state.propSurface — snapshotted above
 }

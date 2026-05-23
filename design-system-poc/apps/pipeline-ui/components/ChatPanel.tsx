@@ -201,6 +201,9 @@ export function ChatPanel() {
         {state.buildStatuses.map((s, i) => (
           <SystemBubble key={i} text={s} />
         ))}
+        {state.buildError && (
+          <SystemBubble text={`Build failed: ${state.buildError}`} />
+        )}
 
         {error && (
           <div style={{ color: '#ff6b6b', fontSize: 13, padding: '8px 12px', background: '#2a1a1a', borderRadius: 8 }}>{error}</div>

@@ -38,6 +38,7 @@ export interface AppState {
   messages: ChatMessage[]
   propSurface: PropSurface | null
   buildStatuses: string[]
+  buildError: string | null
   commitSha: string | null
   preBuildSha: string | null
   prUrl: string | null
@@ -70,6 +71,7 @@ export function createAppState(): AppState {
     messages: [],
     propSurface: null,
     buildStatuses: [],
+    buildError: null,
     commitSha: null,
     preBuildSha: null,
     prUrl: null,
@@ -104,7 +106,7 @@ export function transition(state: AppState, action: AppAction): AppState {
     case 'PROP_SURFACE_READY':
       return { ...state, propSurface: action.propSurface }
     case 'BUILD_START':
-      return { ...state, stage: 'building', buildStatuses: [], commitSha: null, preBuildSha: null }
+      return { ...state, stage: 'building', buildStatuses: [], buildError: null, commitSha: null, preBuildSha: null }
     case 'BUILD_STATUS':
       return { ...state, buildStatuses: [...state.buildStatuses, action.message] }
     case 'BUILD_SUCCESS':
@@ -117,7 +119,7 @@ export function transition(state: AppState, action: AppAction): AppState {
         selectedComponent: state.componentName,
       }
     case 'BUILD_FAIL':
-      return { ...state, stage: 'grilling', buildStatuses: [] }
+      return { ...state, stage: 'grilling', buildStatuses: [], buildError: action.error }
     case 'PR_CREATED':
       return { ...state, prUrl: action.prUrl }
     case 'SELECT_COMPONENT':
