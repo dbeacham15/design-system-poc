@@ -1,21 +1,39 @@
 'use client'
+import { useState } from 'react'
 import { useChat } from '@ai-sdk/react'
+import { DefaultChatTransport } from 'ai'
 import { usePipeline } from '@/lib/pipeline-context'
 import { extractPropSurface } from '@/lib/grill-prompt'
 
 export function GrillScreen() {
   const { state, dispatch } = usePipeline()
+  const [input, setInput] = useState('')
 
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
-    api: '/api/chat',
-    initialMessages: state.messages.map((m, i) => ({ id: String(i), role: m.role, content: m.content })),
-    body: { componentName: state.componentName, figmaDesign: state.figmaDesign },
-    onFinish(message) {
+  const { messages, sendMessage, status } = useChat({
+    transport: new DefaultChatTransport({
+      api: '/api/chat',
+      body: { componentName: state.componentName, figmaDesign: state.figmaDesign },
+    }),
+    messages: state.messages.map((m, i) => ({
+      id: String(i),
+      role: m.role as 'user' | 'assistant',
+      parts: [{ type: 'text' as const, text: m.content }],
+    })),
+    onFinish({ message }) {
       const text = message.parts?.find((p: { type: string }) => p.type === 'text')?.text ?? ''
       const surface = extractPropSurface(text)
       if (surface) dispatch({ type: 'PROP_SURFACE_READY', propSurface: surface })
     },
   })
+
+  const isLoading = status === 'streaming' || status === 'submitted'
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!input.trim() || isLoading) return
+    sendMessage({ text: input })
+    setInput('')
+  }
 
   return (
     <main style={{ maxWidth: 720, margin: '0 auto', padding: '40px 24px', display: 'flex', flexDirection: 'column', height: '100vh', boxSizing: 'border-box' }}>
@@ -24,9 +42,7 @@ export function GrillScreen() {
 
       <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 16 }}>
         {messages.map(msg => {
-          const text = msg.parts
-            ? msg.parts.filter((p: { type: string }) => p.type === 'text').map((p: { type: string; text: string }) => p.text).join('')
-            : (msg as unknown as { content: string }).content
+          const text = msg.parts?.find((p: { type: string }) => p.type === 'text')?.text ?? ''
           return (
             <div
               key={msg.id}
@@ -48,7 +64,7 @@ export function GrillScreen() {
       <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 8 }}>
         <input
           value={input}
-          onChange={handleInputChange}
+          onChange={e => setInput(e.target.value)}
           placeholder="Your answer…"
           disabled={isLoading}
           style={{ flex: 1, padding: '12px 16px', borderRadius: 8, border: '1px solid #333', background: '#1a1a1a', color: '#f0f0f0', fontSize: 15, outline: 'none' }}

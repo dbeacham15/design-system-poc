@@ -12,13 +12,20 @@ vi.mock('@ai-sdk/react', () => ({
         parts: [{ type: 'text', text: 'What variants does this component have?' }],
       },
     ],
-    input: '',
-    handleInputChange: vi.fn(),
-    handleSubmit: vi.fn(),
-    isLoading: false,
+    sendMessage: vi.fn(),
     status: 'ready',
   }),
 }))
+
+vi.mock('ai', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('ai')>()
+  return {
+    ...actual,
+    DefaultChatTransport: class MockDefaultChatTransport {
+      constructor(_options?: unknown) {}
+    },
+  }
+})
 
 function renderScreen() {
   return render(<PipelineProvider><GrillScreen /></PipelineProvider>)
