@@ -1,11 +1,13 @@
 'use client'
 import { usePipeline } from '@/lib/pipeline-context'
+import { useBuildStream } from '@/hooks/useBuildStream'
 import { ComponentBrowser } from '@/components/ComponentBrowser'
 import { ChatPanel } from '@/components/ChatPanel'
 import { Playground } from '@/components/Playground'
 
 export default function Page() {
   const { state } = usePipeline()
+  useBuildStream()
   const showPlayground = state.stage === 'playground' || state.stage === 'building'
   const chatWidth = showPlayground && state.chatOpen ? 400 : (state.chatOpen ? '100%' : 0)
 

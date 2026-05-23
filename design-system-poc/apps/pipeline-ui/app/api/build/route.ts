@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { generateText } from 'ai'
 import { anthropic } from '@ai-sdk/anthropic'
 import fs from 'fs'
@@ -9,75 +9,109 @@ import { regenerateRegistry, readRegistryNames } from '@/lib/registry-writer'
 import type { PropSurface } from '@/lib/pipeline-state'
 
 export const runtime = 'nodejs'
+export const maxDuration = 120
 
 export async function POST(req: NextRequest) {
   const { propSurface }: { propSurface: PropSurface } = await req.json()
 
   if (!/^[A-Z][A-Za-z0-9]*$/.test(propSurface.componentName)) {
-    return NextResponse.json({ error: 'Invalid component name — must be PascalCase (e.g. Button, MyCard)' }, { status: 400 })
+    return new Response(
+      JSON.stringify({ error: 'Invalid component name — must be PascalCase (e.g. Button, MyCard)' }),
+      { status: 400, headers: { 'Content-Type': 'application/json' } }
+    )
   }
 
-  const repoRoot = path.resolve(process.cwd(), process.env.COMPONENT_LIBRARY_PATH ?? '../../')
-  const dir = componentDir(propSurface.componentName, repoRoot)
+  const encoder = new TextEncoder()
 
-  // Capture the current HEAD before writing any files
-  const preBuildSha = execSync('git rev-parse HEAD', { cwd: repoRoot }).toString().trim()
+  function sse(controller: ReadableStreamDefaultController, data: Record<string, unknown>) {
+    controller.enqueue(encoder.encode('data: ' + JSON.stringify(data) + '\n\n'))
+  }
 
-  // Generate all four files via Claude
-  const { text } = await generateText({
-    model: anthropic('claude-sonnet-4-6'),
-    prompt: buildCodegenPrompt(propSurface),
-    maxOutputTokens: 4096,
+  const stream = new ReadableStream({
+    async start(controller) {
+      try {
+        const repoRoot = path.resolve(process.cwd(), process.env.COMPONENT_LIBRARY_PATH ?? '../../')
+        const dir = componentDir(propSurface.componentName, repoRoot)
+
+        sse(controller, { status: 'Capturing current HEAD…' })
+        const preBuildSha = execSync('git rev-parse HEAD', { cwd: repoRoot }).toString().trim()
+
+        sse(controller, { status: 'Generating component code with Claude…' })
+        const { text } = await generateText({
+          model: anthropic('claude-sonnet-4-6'),
+          prompt: buildCodegenPrompt(propSurface),
+          maxOutputTokens: 4096,
+        })
+
+        sse(controller, { status: 'Parsing generated code…' })
+        let files: Record<string, string>
+        try {
+          files = JSON.parse(text)
+        } catch {
+          sse(controller, { error: 'Code generation returned invalid JSON' })
+          controller.close()
+          return
+        }
+
+        const requiredKeys = ['component', 'test', 'stories', 'index']
+        const missingKeys = requiredKeys.filter(k => typeof files[k] !== 'string' || !files[k])
+        if (missingKeys.length > 0) {
+          sse(controller, { error: `Code generation missing keys: ${missingKeys.join(', ')}` })
+          controller.close()
+          return
+        }
+
+        sse(controller, { status: 'Writing files to disk…' })
+        fs.mkdirSync(dir, { recursive: true })
+        fs.writeFileSync(path.join(dir, `${propSurface.componentName}.tsx`), files.component)
+        fs.writeFileSync(path.join(dir, `${propSurface.componentName}.test.tsx`), files.test)
+        fs.writeFileSync(path.join(dir, `${propSurface.componentName}.stories.tsx`), files.stories)
+        fs.writeFileSync(path.join(dir, 'index.ts'), files.index)
+
+        sse(controller, { status: 'Running tests…' })
+        try {
+          execSync('npm test', { cwd: repoRoot, stdio: 'pipe' })
+        } catch (err) {
+          fs.rmSync(dir, { recursive: true, force: true })
+          sse(controller, { error: `Tests failed: ${String(err)}` })
+          controller.close()
+          return
+        }
+
+        sse(controller, { status: 'Committing component…' })
+        execSync(`git add src/components/${propSurface.componentName}/`, { cwd: repoRoot })
+        execSync(
+          `git commit -m "feat(design-system-poc): add ${propSurface.componentName} component from Figma design"`,
+          { cwd: repoRoot }
+        )
+
+        const commitSha = execSync('git rev-parse HEAD', { cwd: repoRoot }).toString().trim()
+
+        sse(controller, { status: 'Updating component registry…' })
+        const appRoot = process.cwd()
+        try {
+          const existingNames = readRegistryNames(appRoot)
+          const allNames = Array.from(new Set([...existingNames, propSurface.componentName]))
+          regenerateRegistry(allNames, appRoot)
+        } catch (err) {
+          console.error('[registry-writer] Failed to regenerate registry:', err)
+          // Non-fatal — component is committed; registry will be repaired on next build
+        }
+
+        sse(controller, { done: true, commitSha, preBuildSha })
+      } catch (err) {
+        sse(controller, { error: String(err) })
+      } finally {
+        controller.close()
+      }
+    },
   })
 
-  let files: Record<string, string>
-  try {
-    files = JSON.parse(text)
-  } catch {
-    return NextResponse.json({ error: 'Code generation returned invalid JSON', raw: text }, { status: 500 })
-  }
-
-  const requiredKeys = ['component', 'test', 'stories', 'index']
-  const missingKeys = requiredKeys.filter(k => typeof files[k] !== 'string' || !files[k])
-  if (missingKeys.length > 0) {
-    return NextResponse.json({ error: `Code generation missing keys: ${missingKeys.join(', ')}`, raw: text }, { status: 500 })
-  }
-
-  // Write files to disk
-  fs.mkdirSync(dir, { recursive: true })
-  fs.writeFileSync(path.join(dir, `${propSurface.componentName}.tsx`), files.component)
-  fs.writeFileSync(path.join(dir, `${propSurface.componentName}.test.tsx`), files.test)
-  fs.writeFileSync(path.join(dir, `${propSurface.componentName}.stories.tsx`), files.stories)
-  fs.writeFileSync(path.join(dir, 'index.ts'), files.index)
-
-  // Run tests in the component library — if they fail, clean up and return 422
-  try {
-    execSync('npm test', { cwd: repoRoot, stdio: 'pipe' })
-  } catch (err) {
-    fs.rmSync(dir, { recursive: true, force: true })
-    return NextResponse.json({ error: 'Tests failed after code generation', details: String(err) }, { status: 422 })
-  }
-
-  // Commit the new component
-  execSync(`git add src/components/${propSurface.componentName}/`, { cwd: repoRoot })
-  execSync(
-    `git commit -m "feat(design-system-poc): add ${propSurface.componentName} component from Figma design"`,
-    { cwd: repoRoot }
-  )
-
-  const commitSha = execSync('git rev-parse HEAD', { cwd: repoRoot }).toString().trim()
-  const storySlug = propSurface.componentName.toLowerCase()
-  const storyUrl = `http://localhost:6006/?path=/story/${storySlug}--primary`
-
-  const appRoot = process.cwd() // apps/pipeline-ui
-  try {
-    const existingNames = readRegistryNames(appRoot)
-    const allNames = Array.from(new Set([...existingNames, propSurface.componentName]))
-    regenerateRegistry(allNames, appRoot)
-  } catch (err) {
-    console.error('[registry-writer] Failed to regenerate registry:', err)
-    // Non-fatal — component is committed; registry will be repaired on next build
-  }
-
-  return NextResponse.json({ commitSha, preBuildSha, storyUrl })
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive',
+    },
+  })
 }
