@@ -176,7 +176,7 @@ export function ChatPanel() {
           }
           // Strip [PROP_SURFACE] blocks from display text
           const displayText = msg.content.replace(/\[PROP_SURFACE\][\s\S]*?\[\/PROP_SURFACE\]/g, '').trim()
-          const surface: PropSurface | null = msg.role === 'assistant' ? extractPropSurface(msg.content) : null
+          const surface = msg.role === 'assistant' ? extractPropSurface(msg.content) : null
           return (
             <div key={msg.id}>
               {displayText && <Bubble role={msg.role} text={displayText} streaming={false} />}
