@@ -1,70 +1,108 @@
 import { describe, it, expect } from 'vitest'
-import { createPipelineState, transition } from './pipeline-state'
+import { createAppState, transition } from './pipeline-state'
 
-describe('pipeline state machine', () => {
-  it('starts at landing stage', () => {
-    const state = createPipelineState()
-    expect(state.stage).toBe('landing')
+describe('createAppState', () => {
+  it('returns idle stage with chatOpen true', () => {
+    const s = createAppState()
+    expect(s.stage).toBe('idle')
+    expect(s.chatOpen).toBe(true)
+    expect(s.messages).toEqual([])
+    expect(s.buildStatuses).toEqual([])
+    expect(s.propSurface).toBeNull()
+    expect(s.selectedComponent).toBeNull()
+  })
+})
+
+describe('transition', () => {
+  it('OPEN_CHAT sets chatOpen true', () => {
+    const s = transition({ ...createAppState(), chatOpen: false }, { type: 'OPEN_CHAT' })
+    expect(s.chatOpen).toBe(true)
   })
 
-  it('transitions landing → grill when figma read succeeds', () => {
-    const state = createPipelineState()
-    const next = transition(state, {
-      type: 'FIGMA_READ',
-      figmaUrl: 'https://figma.com/design/abc',
-      componentName: 'Button',
-      figmaDesign: { nodes: [] },
-    })
-    expect(next.stage).toBe('grill')
-    expect(next.figmaUrl).toBe('https://figma.com/design/abc')
-    expect(next.componentName).toBe('Button')
+  it('CLOSE_CHAT sets chatOpen false', () => {
+    const s = transition(createAppState(), { type: 'CLOSE_CHAT' })
+    expect(s.chatOpen).toBe(false)
   })
 
-  it('transitions grill → prop-review when prop surface ready', () => {
-    let state = createPipelineState()
-    state = transition(state, { type: 'FIGMA_READ', figmaUrl: 'https://figma.com/design/abc', componentName: 'Button', figmaDesign: { nodes: [] } })
-    const next = transition(state, { type: 'PROP_SURFACE_READY', propSurface: { componentName: 'Button', props: [] } })
-    expect(next.stage).toBe('prop-review')
-    expect(next.propSurface).toEqual({ componentName: 'Button', props: [] })
+  it('SET_INTENT transitions to grilling with intent and componentName', () => {
+    const s = transition(createAppState(), { type: 'SET_INTENT', intent: 'new', componentName: 'Button' })
+    expect(s.stage).toBe('grilling')
+    expect(s.intent).toBe('new')
+    expect(s.componentName).toBe('Button')
+    expect(s.chatOpen).toBe(true)
   })
 
-  it('transitions prop-review → building on BUILD_START', () => {
-    let state = createPipelineState()
-    state = transition(state, { type: 'FIGMA_READ', figmaUrl: 'https://figma.com/design/abc', componentName: 'Button', figmaDesign: { nodes: [] } })
-    state = transition(state, { type: 'PROP_SURFACE_READY', propSurface: { componentName: 'Button', props: [] } })
-    expect(transition(state, { type: 'BUILD_START' }).stage).toBe('building')
+  it('FIGMA_READY sets figmaUrl, componentName, figmaDesign', () => {
+    const design = { nodes: [] }
+    const s = transition(createAppState(), { type: 'FIGMA_READY', figmaUrl: 'https://figma.com', componentName: 'Card', figmaDesign: design })
+    expect(s.figmaUrl).toBe('https://figma.com')
+    expect(s.componentName).toBe('Card')
+    expect(s.figmaDesign).toEqual(design)
+    expect(s.stage).toBe('grilling')
   })
 
-  it('transitions building → preview on BUILD_SUCCESS', () => {
-    let state = createPipelineState()
-    state = transition(state, { type: 'FIGMA_READ', figmaUrl: 'https://figma.com/design/abc', componentName: 'Button', figmaDesign: { nodes: [] } })
-    state = transition(state, { type: 'PROP_SURFACE_READY', propSurface: { componentName: 'Button', props: [] } })
-    state = transition(state, { type: 'BUILD_START' })
-    const next = transition(state, { type: 'BUILD_SUCCESS', commitSha: 'abc123', preBuildSha: 'def456', storyUrl: 'http://localhost:6006/?path=/story/button--primary' })
-    expect(next.stage).toBe('preview')
-    expect(next.commitSha).toBe('abc123')
-    expect(next.preBuildSha).toBe('def456')
+  it('ADD_MESSAGE appends message to messages array', () => {
+    const msg = { id: '1', role: 'user' as const, content: 'hello' }
+    const s = transition(createAppState(), { type: 'ADD_MESSAGE', message: msg })
+    expect(s.messages).toHaveLength(1)
+    expect(s.messages[0]).toEqual(msg)
   })
 
-  it('transitions preview → pr-created on APPROVED', () => {
-    let state = createPipelineState()
-    state = transition(state, { type: 'FIGMA_READ', figmaUrl: 'https://figma.com/design/abc', componentName: 'Button', figmaDesign: { nodes: [] } })
-    state = transition(state, { type: 'PROP_SURFACE_READY', propSurface: { componentName: 'Button', props: [] } })
-    state = transition(state, { type: 'BUILD_START' })
-    state = transition(state, { type: 'BUILD_SUCCESS', commitSha: 'abc123', preBuildSha: 'def456', storyUrl: 'http://localhost:6006' })
-    const next = transition(state, { type: 'APPROVED', prUrl: 'https://github.com/dbeacham15/design-system-poc/pull/2' })
-    expect(next.stage).toBe('pr-created')
-    expect(next.prUrl).toBe('https://github.com/dbeacham15/design-system-poc/pull/2')
+  it('ADD_MESSAGE supports system role', () => {
+    const msg = { id: '2', role: 'system' as const, content: 'Building…' }
+    const s = transition(createAppState(), { type: 'ADD_MESSAGE', message: msg })
+    expect(s.messages[0].role).toBe('system')
   })
 
-  it('transitions preview → grill on REQUEST_CHANGES and pre-seeds feedback message', () => {
-    let state = createPipelineState()
-    state = transition(state, { type: 'FIGMA_READ', figmaUrl: 'https://figma.com/design/abc', componentName: 'Button', figmaDesign: { nodes: [] } })
-    state = transition(state, { type: 'PROP_SURFACE_READY', propSurface: { componentName: 'Button', props: [] } })
-    state = transition(state, { type: 'BUILD_START' })
-    state = transition(state, { type: 'BUILD_SUCCESS', commitSha: 'abc123', preBuildSha: 'def456', storyUrl: 'http://localhost:6006' })
-    const next = transition(state, { type: 'REQUEST_CHANGES', feedback: 'The ghost variant needs a border' })
-    expect(next.stage).toBe('grill')
-    expect(next.messages.at(-1)?.content).toContain('ghost variant')
+  it('PROP_SURFACE_READY sets propSurface without changing stage', () => {
+    const surface = { componentName: 'Button', props: [] }
+    const grilling = { ...createAppState(), stage: 'grilling' as const }
+    const s = transition(grilling, { type: 'PROP_SURFACE_READY', propSurface: surface })
+    expect(s.propSurface).toEqual(surface)
+    expect(s.stage).toBe('grilling') // stage does NOT change
+  })
+
+  it('BUILD_START transitions to building and clears statuses', () => {
+    const s = transition({ ...createAppState(), buildStatuses: ['old'] }, { type: 'BUILD_START' })
+    expect(s.stage).toBe('building')
+    expect(s.buildStatuses).toEqual([])
+    expect(s.commitSha).toBeNull()
+    expect(s.preBuildSha).toBeNull()
+  })
+
+  it('BUILD_STATUS appends to buildStatuses', () => {
+    const building = { ...createAppState(), stage: 'building' as const, buildStatuses: [] }
+    const s = transition(building, { type: 'BUILD_STATUS', message: 'Generating…' })
+    expect(s.buildStatuses).toEqual(['Generating…'])
+  })
+
+  it('BUILD_SUCCESS transitions to playground and sets selectedComponent', () => {
+    const s = transition(
+      { ...createAppState(), stage: 'building' as const, componentName: 'Button' },
+      { type: 'BUILD_SUCCESS', commitSha: 'abc', preBuildSha: 'def' }
+    )
+    expect(s.stage).toBe('playground')
+    expect(s.commitSha).toBe('abc')
+    expect(s.preBuildSha).toBe('def')
+    expect(s.selectedComponent).toBe('Button')
+    expect(s.chatOpen).toBe(true)
+  })
+
+  it('SELECT_COMPONENT transitions to playground with chatOpen false', () => {
+    const s = transition(createAppState(), { type: 'SELECT_COMPONENT', componentName: 'Input', propSurface: null })
+    expect(s.stage).toBe('playground')
+    expect(s.selectedComponent).toBe('Input')
+    expect(s.chatOpen).toBe(false)
+  })
+
+  it('RESET returns initial state', () => {
+    const modified = { ...createAppState(), stage: 'playground' as const, componentName: 'Button', chatOpen: false }
+    const s = transition(modified, { type: 'RESET' })
+    expect(s).toEqual(createAppState())
+  })
+
+  it('PR_CREATED sets prUrl', () => {
+    const s = transition(createAppState(), { type: 'PR_CREATED', prUrl: 'https://github.com/pr/1' })
+    expect(s.prUrl).toBe('https://github.com/pr/1')
   })
 })

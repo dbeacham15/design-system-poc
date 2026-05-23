@@ -28,11 +28,6 @@ export interface ChatMessage {
   content: string
 }
 
-export interface BuildStatus {
-  message: string
-  done: boolean
-}
-
 export interface AppState {
   stage: AppStage
   chatOpen: boolean
