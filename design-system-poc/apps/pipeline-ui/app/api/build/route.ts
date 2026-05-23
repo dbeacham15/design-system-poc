@@ -70,9 +70,14 @@ export async function POST(req: NextRequest) {
   const storyUrl = `http://localhost:6006/?path=/story/${storySlug}--primary`
 
   const appRoot = process.cwd() // apps/pipeline-ui
-  const existingNames = readRegistryNames(appRoot)
-  const allNames = Array.from(new Set([...existingNames, propSurface.componentName]))
-  regenerateRegistry(allNames, appRoot)
+  try {
+    const existingNames = readRegistryNames(appRoot)
+    const allNames = Array.from(new Set([...existingNames, propSurface.componentName]))
+    regenerateRegistry(allNames, appRoot)
+  } catch (err) {
+    console.error('[registry-writer] Failed to regenerate registry:', err)
+    // Non-fatal — component is committed; registry will be repaired on next build
+  }
 
   return NextResponse.json({ commitSha, preBuildSha, storyUrl })
 }
