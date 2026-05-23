@@ -13,6 +13,9 @@ export async function readFigmaNode(fileKey: string, nodeId: string, token: stri
     : `https://api.figma.com/v1/files/${fileKey}?depth=1`
 
   const res = await fetch(url, { headers: { 'X-Figma-Token': token } })
-  if (!res.ok) throw new Error(`Figma API error: ${res.status} ${res.statusText}`)
+  if (!res.ok) {
+    const body = await res.text().catch(() => '')
+    throw new Error(`Figma API error: ${res.status} ${res.statusText}${body ? ` — ${body}` : ''}`)
+  }
   return res.json()
 }
