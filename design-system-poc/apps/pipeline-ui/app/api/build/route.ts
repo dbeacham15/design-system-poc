@@ -12,6 +12,10 @@ export const runtime = 'nodejs'
 export async function POST(req: NextRequest) {
   const { propSurface }: { propSurface: PropSurface } = await req.json()
 
+  if (!/^[A-Z][A-Za-z0-9]*$/.test(propSurface.componentName)) {
+    return NextResponse.json({ error: 'Invalid component name — must be PascalCase (e.g. Button, MyCard)' }, { status: 400 })
+  }
+
   const repoRoot = path.resolve(process.cwd(), process.env.COMPONENT_LIBRARY_PATH ?? '../../')
   const dir = componentDir(propSurface.componentName, repoRoot)
 
@@ -30,6 +34,12 @@ export async function POST(req: NextRequest) {
     files = JSON.parse(text)
   } catch {
     return NextResponse.json({ error: 'Code generation returned invalid JSON', raw: text }, { status: 500 })
+  }
+
+  const requiredKeys = ['component', 'test', 'stories', 'index']
+  const missingKeys = requiredKeys.filter(k => typeof files[k] !== 'string' || !files[k])
+  if (missingKeys.length > 0) {
+    return NextResponse.json({ error: `Code generation missing keys: ${missingKeys.join(', ')}`, raw: text }, { status: 500 })
   }
 
   // Write files to disk
