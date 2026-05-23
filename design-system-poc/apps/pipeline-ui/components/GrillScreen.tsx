@@ -21,6 +21,8 @@ if (typeof document !== 'undefined' && !document.getElementById('grill-style')) 
 interface Message { role: 'user' | 'assistant'; content: string }
 type Status = 'idle' | 'thinking' | 'streaming'
 
+const TRIGGER = 'Please begin the grill session by asking your first question about the component.'
+
 export function GrillScreen() {
   const { state, dispatch } = usePipeline()
   const [messages, setMessages] = useState<Message[]>([])
@@ -38,12 +40,13 @@ export function GrillScreen() {
 
   useEffect(() => { scrollToBottom() }, [messages, streamingText])
 
-  const sendMessage = useCallback(async (userText: string, history: Message[]) => {
+  const sendMessage = useCallback(async (userText: string, history: Message[], silent = false) => {
     const allMessages: Message[] = userText
       ? [...history, { role: 'user', content: userText }]
       : history
 
-    if (userText) setMessages(allMessages)
+    // silent = trigger message not shown in UI; always needs at least one message for the API
+    if (userText && !silent) setMessages(allMessages)
 
     setStatus('thinking')
     setStreamingText('')
@@ -117,11 +120,11 @@ export function GrillScreen() {
     }
   }, [state.componentName, state.figmaDesign, dispatch])
 
-  // Auto-start: Claude asks the first question
+  // Auto-start: send a silent trigger so Claude asks the first question
   useEffect(() => {
     if (triggered.current) return
     triggered.current = true
-    sendMessage('', [])
+    sendMessage(TRIGGER, [], true)
   }, [sendMessage])
 
   function handleSubmit(e: React.FormEvent) {
