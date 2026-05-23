@@ -21,6 +21,12 @@ describe('StreamingMarkdown', () => {
     expect(screen.queryByText('const x')).not.toBeInTheDocument()
   })
 
+  it('shows placeholder while holding back an incomplete code fence', () => {
+    const text = "Here is code:\n```ts\nconst x"
+    render(<StreamingMarkdown text={text} streaming={true} />)
+    expect(screen.getByText('···')).toBeInTheDocument()
+  })
+
   it('renders complete code fences normally', () => {
     const text = "```ts\nconst x = 1\n```"
     render(<StreamingMarkdown text={text} streaming={false} />)
