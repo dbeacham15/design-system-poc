@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { usePipeline } from '@/lib/pipeline-context'
-import { extractPropSurface } from '@/lib/grill-prompt'
+import { extractPropSurface, extractSuggestion } from '@/lib/grill-prompt'
 
 // Inject keyframes once
 if (typeof document !== 'undefined' && !document.getElementById('grill-style')) {
@@ -31,14 +31,27 @@ export function GrillScreen() {
   const [input, setInput] = useState('')
   const [error, setError] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
   const abortRef = useRef<AbortController | null>(null)
   const triggered = useRef(false)
+
+  // Derive suggestion from the last assistant message
+  const lastAssistantMsg = [...messages].reverse().find(m => m.role === 'assistant')
+  const suggestion = lastAssistantMsg ? extractSuggestion(lastAssistantMsg.content) : null
 
   const scrollToBottom = useCallback(() => {
     bottomRef.current?.scrollIntoView?.({ behavior: 'smooth' })
   }, [])
 
   useEffect(() => { scrollToBottom() }, [messages, streamingText])
+
+  // Auto-focus input when Claude finishes responding
+  useEffect(() => {
+    if (status === 'idle' && messages.length > 0) {
+      inputRef.current?.focus()
+    }
+  }, [status, messages.length])
+
 
   const sendMessage = useCallback(async (userText: string, history: Message[], silent = false) => {
     const allMessages: Message[] = userText
@@ -129,8 +142,9 @@ export function GrillScreen() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    const text = input.trim()
-    if (!text || status !== 'idle') return
+    if (status !== 'idle') return
+    const text = input.trim() || suggestion || ''
+    if (!text) return
     setInput('')
     sendMessage(text, messages)
   }
@@ -186,33 +200,46 @@ export function GrillScreen() {
       </div>
 
       {/* Input */}
-      <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-        <input
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          placeholder={isLoading ? 'Claude is responding…' : 'Your answer…'}
-          disabled={isLoading}
-          autoFocus
-          style={{
-            flex: 1, padding: '12px 16px', borderRadius: 8,
-            border: '1px solid #333', background: '#1a1a1a',
-            color: '#f0f0f0', fontSize: 15, outline: 'none',
-            opacity: isLoading ? 0.5 : 1, transition: 'opacity .15s',
-          }}
-        />
-        <button
-          type="submit"
-          disabled={isLoading || !input.trim()}
-          style={{
-            padding: '12px 20px', borderRadius: 8, border: 'none',
-            background: isLoading || !input.trim() ? '#2a2a2a' : '#0BCE83',
-            color: isLoading || !input.trim() ? '#555' : '#000',
-            fontWeight: 600, cursor: isLoading || !input.trim() ? 'not-allowed' : 'pointer',
-            transition: 'background .15s, color .15s',
-          }}
-        >
-          Send
-        </button>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
+        {suggestion && !isLoading && (
+          <p style={{ margin: 0, fontSize: 12, color: '#0BCE83', paddingLeft: 4 }}>
+            💡 Suggested — press Enter to accept, or type your own answer
+          </p>
+        )}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input
+            ref={inputRef}
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            placeholder={
+              isLoading
+                ? 'Claude is responding…'
+                : suggestion ?? 'Your answer…'
+            }
+            disabled={isLoading}
+            style={{
+              flex: 1, padding: '12px 16px', borderRadius: 8,
+              border: `1px solid ${suggestion && !isLoading && !input ? '#0BCE8366' : '#333'}`,
+              background: '#1a1a1a', color: '#f0f0f0', fontSize: 15, outline: 'none',
+              opacity: isLoading ? 0.5 : 1, transition: 'opacity .15s, border-color .2s',
+            }}
+          />
+          <button
+            type="submit"
+            disabled={isLoading || (!input.trim() && !suggestion)}
+            style={{
+              padding: '12px 20px', borderRadius: 8, border: 'none',
+              background: isLoading || (!input.trim() && !suggestion) ? '#2a2a2a' : '#0BCE83',
+              color: isLoading || (!input.trim() && !suggestion) ? '#555' : '#000',
+              fontWeight: 600,
+              cursor: isLoading || (!input.trim() && !suggestion) ? 'not-allowed' : 'pointer',
+              transition: 'background .15s, color .15s',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {input.trim() ? 'Send' : suggestion ? 'Accept ↵' : 'Send'}
+          </button>
+        </div>
       </form>
     </main>
   )

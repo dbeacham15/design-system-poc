@@ -20,6 +20,17 @@ Cover all of the following topics before finishing:
 - Any additional variants not shown in Figma (e.g. destructive/danger)
 - Full-width option?
 
+## Format for every question
+
+After asking a question, always end your message with a suggested answer on its own line in this exact format:
+→ Suggested: [your recommendation]
+
+Example:
+What sizes should the Button support?
+→ Suggested: "sm", "md", "lg"
+
+This helps the designer quickly confirm or override your recommendation.
+
 ## When all ambiguities are resolved
 
 Output the prop surface in this EXACT format — nothing after [/PROP_SURFACE]:
@@ -29,6 +40,11 @@ Output the prop surface in this EXACT format — nothing after [/PROP_SURFACE]:
 [/PROP_SURFACE]
 
 Replace the example with the actual resolved props.`
+}
+
+export function extractSuggestion(message: string): string | null {
+  const match = message.match(/→\s*Suggested:\s*(.+)$/m)
+  return match ? match[1].trim() : null
 }
 
 export function extractPropSurface(message: string): PropSurface | null {
