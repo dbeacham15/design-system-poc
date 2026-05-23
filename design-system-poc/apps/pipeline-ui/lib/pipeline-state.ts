@@ -64,7 +64,7 @@ export function transition(state: PipelineState, action: PipelineAction): Pipeli
     case 'PROP_SURFACE_READY':
       return { ...state, stage: 'prop-review', propSurface: action.propSurface }
     case 'BUILD_START':
-      return { ...state, stage: 'building' }
+      return { ...state, stage: 'building', commitSha: null, preBuildSha: null, storyUrl: null }
     case 'BUILD_SUCCESS':
       return { ...state, stage: 'preview', commitSha: action.commitSha, preBuildSha: action.preBuildSha, storyUrl: action.storyUrl }
     case 'APPROVED':
@@ -73,6 +73,7 @@ export function transition(state: PipelineState, action: PipelineAction): Pipeli
       return {
         ...state,
         stage: 'grill',
+        propSurface: null,
         messages: [
           ...state.messages,
           { role: 'user', content: `I reviewed the component in Storybook and want changes: ${action.feedback}` },
