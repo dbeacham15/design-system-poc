@@ -1,83 +1,140 @@
 'use client'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { useChat } from '@ai-sdk/react'
-import { DefaultChatTransport } from 'ai'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { usePipeline } from '@/lib/pipeline-context'
 import { extractPropSurface } from '@/lib/grill-prompt'
 
-// Inject keyframes once at module level
-if (typeof document !== 'undefined' && !document.getElementById('grill-pulse-style')) {
+// Inject keyframes once
+if (typeof document !== 'undefined' && !document.getElementById('grill-style')) {
   const s = document.createElement('style')
-  s.id = 'grill-pulse-style'
+  s.id = 'grill-style'
   s.textContent = `
-    @keyframes grill-pulse { 0%,80%,100%{opacity:0.2} 40%{opacity:1} }
-    .grill-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:#0BCE83; margin:0 2px; animation:grill-pulse 1.2s infinite ease-in-out; }
+    @keyframes grill-pulse { 0%,80%,100%{opacity:.2} 40%{opacity:1} }
+    .grill-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#0BCE83;margin:0 2px;animation:grill-pulse 1.2s infinite ease-in-out}
     .grill-dot:nth-child(2){animation-delay:.2s}
     .grill-dot:nth-child(3){animation-delay:.4s}
+    @keyframes grill-fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+    .grill-msg{animation:grill-fadein .18s ease-out}
   `
   document.head.appendChild(s)
 }
 
-const TRIGGER_ID = '__grill_trigger__'
+interface Message { role: 'user' | 'assistant'; content: string }
+type Status = 'idle' | 'thinking' | 'streaming'
 
 export function GrillScreen() {
   const { state, dispatch } = usePipeline()
+  const [messages, setMessages] = useState<Message[]>([])
+  const [streamingText, setStreamingText] = useState('')
+  const [status, setStatus] = useState<Status>('idle')
   const [input, setInput] = useState('')
+  const [error, setError] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const abortRef = useRef<AbortController | null>(null)
   const triggered = useRef(false)
 
-  // Stable transport — never recreated after mount
-  const transport = useMemo(
-    () => new DefaultChatTransport({
-      api: '/api/chat',
-      body: { componentName: state.componentName, figmaDesign: state.figmaDesign },
-    }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
-  )
+  const scrollToBottom = useCallback(() => {
+    bottomRef.current?.scrollIntoView?.({ behavior: 'smooth' })
+  }, [])
 
-  const { messages, sendMessage, status } = useChat({
-    transport,
-    messages: state.messages.map((m, i) => ({
-      id: String(i),
-      role: m.role as 'user' | 'assistant',
-      parts: [{ type: 'text' as const, text: m.content }],
-    })),
-    onFinish({ message }) {
-      const text = message.parts?.find((p: { type: string }) => p.type === 'text')?.text ?? ''
-      const surface = extractPropSurface(text)
+  useEffect(() => { scrollToBottom() }, [messages, streamingText])
+
+  const sendMessage = useCallback(async (userText: string, history: Message[]) => {
+    const allMessages: Message[] = userText
+      ? [...history, { role: 'user', content: userText }]
+      : history
+
+    if (userText) setMessages(allMessages)
+
+    setStatus('thinking')
+    setStreamingText('')
+    setError(null)
+
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: allMessages,
+          componentName: state.componentName,
+          figmaDesign: state.figmaDesign,
+        }),
+        signal: controller.signal,
+      })
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      if (!res.body) throw new Error('No response body')
+
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let accumulated = ''
+      let buffer = ''
+
+      setStatus('streaming')
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() ?? ''
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue
+          const raw = line.slice(6).trim()
+          if (raw === '[DONE]') break
+          try {
+            const parsed = JSON.parse(raw)
+            if (parsed.error) throw new Error(parsed.error)
+            if (parsed.t) {
+              accumulated += parsed.t
+              setStreamingText(accumulated)
+            }
+          } catch (e) {
+            if ((e as Error).message !== 'Unexpected token') throw e
+          }
+        }
+      }
+
+      // Commit the completed assistant message
+      const finalMessages: Message[] = [...allMessages, { role: 'assistant', content: accumulated }]
+      setMessages(finalMessages)
+      setStreamingText('')
+      setStatus('idle')
+
+      // Check if Claude has output a prop surface
+      const surface = extractPropSurface(accumulated)
       if (surface) dispatch({ type: 'PROP_SURFACE_READY', propSurface: surface })
-    },
-  })
 
-  // Auto-start: trigger Claude to ask the first question on mount
+    } catch (err) {
+      if ((err as Error).name === 'AbortError') return
+      setError(String(err))
+      setStatus('idle')
+    }
+  }, [state.componentName, state.figmaDesign, dispatch])
+
+  // Auto-start: Claude asks the first question
   useEffect(() => {
     if (triggered.current) return
     triggered.current = true
-    if (state.messages.length === 0) {
-      sendMessage({ text: 'Please begin the grill session.' })
-    }
-  }, [])
-
-  // Auto-scroll to latest message
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView?.({ behavior: 'smooth' })
-  }, [messages, status])
-
-  const isLoading = status === 'streaming' || status === 'submitted'
+    sendMessage('', [])
+  }, [sendMessage])
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!input.trim() || isLoading) return
-    sendMessage({ text: input })
+    const text = input.trim()
+    if (!text || status !== 'idle') return
     setInput('')
+    sendMessage(text, messages)
   }
 
-  // Filter out the internal trigger message from the visible chat
-  const visibleMessages = messages.filter(m => {
-    const text = m.parts?.find((p: { type: string }) => p.type === 'text')?.text ?? ''
-    return text !== 'Please begin the grill session.'
-  })
+  const isLoading = status !== 'idle'
+  const showThinking = status === 'thinking'
+  const showStreaming = status === 'streaming' && streamingText
 
   return (
     <main style={{
@@ -86,49 +143,39 @@ export function GrillScreen() {
     }}>
       {/* Header */}
       <div style={{ flexShrink: 0, marginBottom: 24 }}>
-        <h2 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 4px' }}>Grill Session</h2>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <p style={{ color: '#888', fontSize: 14, margin: 0 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 6px' }}>Grill Session</h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ color: '#888', fontSize: 14 }}>
             Component: <strong style={{ color: '#f0f0f0' }}>{state.componentName}</strong>
-          </p>
+          </span>
           <StatusBadge status={status} />
         </div>
       </div>
 
       {/* Messages */}
-      <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16 }}>
-        {visibleMessages.length === 0 && isLoading && (
-          <div style={{ alignSelf: 'flex-start' }}>
-            <ThinkingBubble />
+      <div style={{
+        flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column',
+        gap: 12, marginBottom: 16, paddingRight: 4,
+      }}>
+        {messages.map((msg, i) => (
+          <Bubble key={i} role={msg.role} text={msg.content} streaming={false} />
+        ))}
+
+        {showThinking && (
+          <div className="grill-msg" style={{ alignSelf: 'flex-start' }}>
+            <div style={{ background: '#1a1a1a', padding: '14px 18px', borderRadius: 12, display: 'flex', gap: 4 }}>
+              <span className="grill-dot" /><span className="grill-dot" /><span className="grill-dot" />
+            </div>
           </div>
         )}
-        {visibleMessages.map((msg, i) => {
-          const text = msg.parts?.find((p: { type: string }) => p.type === 'text')?.text ?? ''
-          const isUser = msg.role === 'user'
-          const isLast = i === visibleMessages.length - 1
-          const isStreaming = isLast && !isUser && isLoading
 
-          return (
-            <div key={msg.id} style={{ alignSelf: isUser ? 'flex-end' : 'flex-start', maxWidth: '80%' }}>
-              <div style={{
-                background: isUser ? '#0BCE83' : '#1a1a1a',
-                color: isUser ? '#000' : '#f0f0f0',
-                padding: '12px 16px', borderRadius: 12,
-                fontSize: 15, whiteSpace: 'pre-wrap', lineHeight: 1.6,
-                border: isStreaming ? '1px solid #0BCE8355' : '1px solid transparent',
-                transition: 'border-color 0.2s',
-              }}>
-                {text}
-                {isStreaming && <span style={{ opacity: 0.4 }}>▊</span>}
-              </div>
-            </div>
-          )
-        })}
+        {showStreaming && (
+          <Bubble role="assistant" text={streamingText} streaming />
+        )}
 
-        {/* Show thinking dots if loading and last message is from user */}
-        {isLoading && visibleMessages.length > 0 && visibleMessages.at(-1)?.role === 'user' && (
-          <div style={{ alignSelf: 'flex-start' }}>
-            <ThinkingBubble />
+        {error && (
+          <div style={{ color: '#ff6b6b', fontSize: 13, padding: '8px 12px', background: '#2a1a1a', borderRadius: 8 }}>
+            {error}
           </div>
         )}
 
@@ -142,11 +189,12 @@ export function GrillScreen() {
           onChange={e => setInput(e.target.value)}
           placeholder={isLoading ? 'Claude is responding…' : 'Your answer…'}
           disabled={isLoading}
+          autoFocus
           style={{
             flex: 1, padding: '12px 16px', borderRadius: 8,
             border: '1px solid #333', background: '#1a1a1a',
             color: '#f0f0f0', fontSize: 15, outline: 'none',
-            opacity: isLoading ? 0.6 : 1,
+            opacity: isLoading ? 0.5 : 1, transition: 'opacity .15s',
           }}
         />
         <button
@@ -154,10 +202,10 @@ export function GrillScreen() {
           disabled={isLoading || !input.trim()}
           style={{
             padding: '12px 20px', borderRadius: 8, border: 'none',
-            background: isLoading || !input.trim() ? '#333' : '#0BCE83',
-            color: isLoading || !input.trim() ? '#666' : '#000',
+            background: isLoading || !input.trim() ? '#2a2a2a' : '#0BCE83',
+            color: isLoading || !input.trim() ? '#555' : '#000',
             fontWeight: 600, cursor: isLoading || !input.trim() ? 'not-allowed' : 'pointer',
-            transition: 'background 0.15s',
+            transition: 'background .15s, color .15s',
           }}
         >
           Send
@@ -167,34 +215,47 @@ export function GrillScreen() {
   )
 }
 
-function ThinkingBubble() {
+function Bubble({ role, text, streaming }: { role: 'user' | 'assistant'; text: string; streaming: boolean }) {
+  const isUser = role === 'user'
   return (
-    <div style={{
-      background: '#1a1a1a', padding: '14px 18px', borderRadius: 12,
-      display: 'flex', alignItems: 'center', gap: 4,
-    }}>
-      <span className="grill-dot" />
-      <span className="grill-dot" />
-      <span className="grill-dot" />
+    <div className="grill-msg" style={{ alignSelf: isUser ? 'flex-end' : 'flex-start', maxWidth: '82%' }}>
+      <div style={{
+        background: isUser ? '#0BCE83' : '#1a1a1a',
+        color: isUser ? '#000' : '#f0f0f0',
+        padding: '12px 16px', borderRadius: isUser ? '12px 12px 2px 12px' : '12px 12px 12px 2px',
+        fontSize: 15, lineHeight: 1.65, whiteSpace: 'pre-wrap',
+        boxShadow: streaming ? '0 0 0 1px #0BCE8344' : 'none',
+        transition: 'box-shadow .2s',
+      }}>
+        {text}
+        {streaming && (
+          <span style={{
+            display: 'inline-block', width: 2, height: '1em',
+            background: '#0BCE83', marginLeft: 2, verticalAlign: 'text-bottom',
+            animation: 'grill-pulse 0.8s infinite',
+          }} />
+        )}
+      </div>
     </div>
   )
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, { label: string; color: string }> = {
-    ready:     { label: 'Ready',      color: '#555' },
-    submitted: { label: 'Thinking…',  color: '#f5a623' },
-    streaming: { label: 'Responding', color: '#0BCE83' },
-    error:     { label: 'Error',      color: '#ff6b6b' },
+function StatusBadge({ status }: { status: Status }) {
+  const cfg: Record<Status, { label: string; color: string }> = {
+    idle:      { label: 'Ready',       color: '#444' },
+    thinking:  { label: 'Thinking…',   color: '#f5a623' },
+    streaming: { label: 'Responding',  color: '#0BCE83' },
   }
-  const s = map[status] ?? map.ready
+  const { label, color } = cfg[status]
   return (
     <span style={{
-      fontSize: 11, fontWeight: 600, letterSpacing: '0.05em',
-      color: s.color, textTransform: 'uppercase',
-      padding: '2px 8px', borderRadius: 4, border: `1px solid ${s.color}44`,
+      fontSize: 11, fontWeight: 700, letterSpacing: '.06em',
+      color, textTransform: 'uppercase',
+      padding: '2px 8px', borderRadius: 4,
+      border: `1px solid ${color}55`,
+      transition: 'color .2s, border-color .2s',
     }}>
-      {s.label}
+      {label}
     </span>
   )
 }
