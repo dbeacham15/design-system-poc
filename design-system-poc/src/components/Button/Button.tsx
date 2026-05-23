@@ -1,5 +1,13 @@
 import React from 'react'
 
+// Inject keyframe once at module level — avoids a <style> tag on every render
+if (typeof document !== 'undefined' && !document.getElementById('button-spin-style')) {
+  const styleEl = document.createElement('style')
+  styleEl.id = 'button-spin-style'
+  styleEl.textContent = '@keyframes button-spin { to { transform: rotate(360deg); } }'
+  document.head.appendChild(styleEl)
+}
+
 type Variant = 'primary' | 'secondary' | 'ghost'
 type Size = 'sm' | 'md' | 'lg'
 
@@ -16,7 +24,7 @@ interface ButtonProps {
 }
 
 const sizeStyles: Record<Size, React.CSSProperties> = {
-  sm: { height: '32px', padding: '0 12px', fontSize: '13px' },
+  sm: { height: '32px', padding: '0 12px', fontSize: '15px' },
   md: { height: '40px', padding: '0 16px', fontSize: '15px' },
   lg: { height: '56px', padding: '0 24px', fontSize: '15px' },
 }
@@ -28,7 +36,7 @@ const variantStyles: Record<Variant, React.CSSProperties> = {
 }
 
 const Spinner = () => (
-  <span style={{
+  <span data-testid="spinner" style={{
     display: 'inline-block',
     width: '14px',
     height: '14px',
@@ -62,7 +70,7 @@ export function Button({
     textTransform: 'uppercase',
     letterSpacing: '0.02em',
     cursor: isDisabled ? 'not-allowed' : 'pointer',
-    opacity: isDisabled ? 0.5 : 1,
+    opacity: disabled ? 0.5 : 1,
     width: fullWidth ? '100%' : undefined,
     fontFamily: 'inherit',
     lineHeight: 1,
@@ -71,21 +79,19 @@ export function Button({
   }
 
   return (
-    <>
-      <style>{`@keyframes button-spin { to { transform: rotate(360deg); } }`}</style>
-      <button
-        type={type}
-        disabled={isDisabled}
-        onClick={onClick}
-        style={style}
-      >
-        {loading ? <Spinner /> : (
-          <>
-            {leftIcon}
-            {children}
-          </>
-        )}
-      </button>
-    </>
+    <button
+      type={type}
+      disabled={isDisabled}
+      aria-busy={loading}
+      onClick={onClick}
+      style={style}
+    >
+      {loading ? <Spinner /> : (
+        <>
+          {leftIcon}
+          {children}
+        </>
+      )}
+    </button>
   )
 }
