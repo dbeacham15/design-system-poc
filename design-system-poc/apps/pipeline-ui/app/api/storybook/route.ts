@@ -3,6 +3,7 @@ import { spawn } from 'child_process'
 import path from 'path'
 
 export const runtime = 'nodejs'
+export const maxDuration = 120
 
 async function isStorybookRunning(): Promise<boolean> {
   try {

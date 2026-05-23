@@ -1,13 +1,17 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { usePipeline } from '@/lib/pipeline-context'
 
 export function BuildScreen() {
   const { state, dispatch } = usePipeline()
   const [status, setStatus] = useState('Generating component code…')
   const [error, setError] = useState<string | null>(null)
+  const hasRun = useRef(false)
 
   useEffect(() => {
+    if (hasRun.current) return
+    hasRun.current = true
+
     async function runBuild() {
       try {
         setStatus('Generating component code…')
