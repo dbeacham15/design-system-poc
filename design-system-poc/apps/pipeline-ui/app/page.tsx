@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { usePipeline } from '@/lib/pipeline-context'
 import { GrillScreen } from '@/components/GrillScreen'
 import { PropSurfaceReview } from '@/components/PropSurfaceReview'
@@ -13,6 +13,13 @@ export default function Page() {
   const [componentName, setComponentName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [retryIn, setRetryIn] = useState(0)
+
+  useEffect(() => {
+    if (retryIn <= 0) return
+    const t = setTimeout(() => setRetryIn(r => r - 1), 1000)
+    return () => clearTimeout(t)
+  }, [retryIn])
 
   if (state.stage === 'grill') return <GrillScreen />
   if (state.stage === 'prop-review') return <PropSurfaceReview />
@@ -33,6 +40,10 @@ export default function Page() {
         body: JSON.stringify({ figmaUrl, nodeId }),
       })
       const data = await res.json()
+      if (res.status === 429) {
+        setRetryIn(15)
+        throw new Error('Figma rate limit hit — you can retry in a few seconds.')
+      }
       if (!res.ok) throw new Error(data.error)
       dispatch({ type: 'FIGMA_READ', figmaUrl, componentName: componentName.trim(), figmaDesign: data.design })
     } catch (err) {
@@ -42,7 +53,7 @@ export default function Page() {
     }
   }
 
-  const canStart = figmaUrl.trim() !== '' && componentName.trim() !== ''
+  const canStart = figmaUrl.trim() !== '' && componentName.trim() !== '' && retryIn === 0
 
   return (
     <main style={{ maxWidth: 600, margin: '0 auto', padding: '80px 24px' }}>
@@ -64,13 +75,18 @@ export default function Page() {
           onChange={e => setComponentName(e.target.value)}
           style={inputStyle}
         />
-        {error && <p style={{ color: '#ff6b6b', fontSize: 14, margin: 0 }}>{error}</p>}
+        {error && (
+          <p style={{ color: '#ff6b6b', fontSize: 14, margin: 0 }}>
+            {error}
+            {retryIn > 0 && <span style={{ color: '#888' }}> Retry in {retryIn}s…</span>}
+          </p>
+        )}
         <button
           onClick={handleStart}
           disabled={!canStart || loading}
           style={btnStyle(!canStart || loading)}
         >
-          {loading ? 'Reading Figma…' : 'Start'}
+          {loading ? 'Reading Figma…' : retryIn > 0 ? `Retry in ${retryIn}s` : 'Start'}
         </button>
       </div>
     </main>
