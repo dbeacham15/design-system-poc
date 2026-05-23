@@ -54,6 +54,7 @@ export type AppAction =
   | { type: 'BUILD_START' }
   | { type: 'BUILD_STATUS'; message: string }
   | { type: 'BUILD_SUCCESS'; commitSha: string; preBuildSha: string }
+  | { type: 'BUILD_FAIL'; error: string }
   | { type: 'PR_CREATED'; prUrl: string }
   | { type: 'SELECT_COMPONENT'; componentName: string; propSurface: PropSurface | null }
   | { type: 'RESET' }
@@ -115,6 +116,8 @@ export function transition(state: AppState, action: AppAction): AppState {
         preBuildSha: action.preBuildSha,
         selectedComponent: state.componentName,
       }
+    case 'BUILD_FAIL':
+      return { ...state, stage: 'grilling', buildStatuses: [] }
     case 'PR_CREATED':
       return { ...state, prUrl: action.prUrl }
     case 'SELECT_COMPONENT':

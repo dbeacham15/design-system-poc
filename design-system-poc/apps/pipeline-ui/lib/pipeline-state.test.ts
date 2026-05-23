@@ -105,4 +105,11 @@ describe('transition', () => {
     const s = transition(createAppState(), { type: 'PR_CREATED', prUrl: 'https://github.com/pr/1' })
     expect(s.prUrl).toBe('https://github.com/pr/1')
   })
+
+  it('BUILD_FAIL returns to grilling stage and clears buildStatuses', () => {
+    const building = { ...createAppState(), stage: 'building' as const, buildStatuses: ['step1', 'step2'] }
+    const s = transition(building, { type: 'BUILD_FAIL', error: 'Tests failed' })
+    expect(s.stage).toBe('grilling')
+    expect(s.buildStatuses).toEqual([])
+  })
 })

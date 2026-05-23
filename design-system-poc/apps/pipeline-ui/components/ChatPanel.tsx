@@ -1,10 +1,10 @@
 'use client'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { usePipeline } from '@/lib/pipeline-context'
-import { extractPropSurface, extractSuggestion, buildGrillSystemPrompt, buildLandingSystemPrompt } from '@/lib/grill-prompt'
+import { extractPropSurface, extractSuggestion, buildGrillSystemPrompt, buildLandingSystemPrompt, extractIntent } from '@/lib/grill-prompt'
 import { StreamingMarkdown } from './StreamingMarkdown'
 import { PropSurfaceCard } from './PropSurfaceCard'
-import type { ChatMessage, PropSurface } from '@/lib/pipeline-state'
+import type { ChatMessage } from '@/lib/pipeline-state'
 
 // Inject animation styles once
 if (typeof document !== 'undefined' && !document.getElementById('chat-style')) {
@@ -121,6 +121,14 @@ export function ChatPanel() {
       // Detect prop surface
       const surface = extractPropSurface(accumulated)
       if (surface) dispatch({ type: 'PROP_SURFACE_READY', propSurface: surface })
+
+      // Detect intent signal from landing chat
+      if (state.stage === 'idle') {
+        const detected = extractIntent(accumulated)
+        if (detected) {
+          dispatch({ type: 'SET_INTENT', intent: detected.intent, componentName: detected.componentName })
+        }
+      }
 
     } catch (err) {
       if ((err as Error).name === 'AbortError') return

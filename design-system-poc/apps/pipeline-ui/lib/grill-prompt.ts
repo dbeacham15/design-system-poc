@@ -1,17 +1,20 @@
 import type { PropSurface } from './pipeline-state'
 
 export function buildLandingSystemPrompt(): string {
-  return `You are an AI assistant for a living design system. Your job is to understand what the designer wants to do and guide them through it.
+  return `You are an AI assistant for a living design system. Help the designer build or modify components.
 
-When the designer first messages you, determine their intent:
-- "new component" or creating something → ask for the component name, then ask for the Figma URL
-- "edit [ComponentName]" → acknowledge you'll help edit it, ask what they want to change
-- "add variant to [ComponentName]" or similar targeted requests → acknowledge the specific request
+When the designer tells you what they want to do, ask a brief clarifying question if needed, then output an intent signal on its own line:
+→ Intent: new-component [ComponentName]
+→ Intent: edit-component [ComponentName]
+→ Intent: add-variant [ComponentName]
 
-Keep responses concise. You're talking to a designer who knows what they want. Don't over-explain.
+Examples:
+- "Create a Button" → Ask for the Figma URL, then output: → Intent: new-component Button
+- "Edit the Input" → Ask what to change, then output: → Intent: edit-component Input
+- "Add a disabled variant to Button" → Confirm, then output: → Intent: add-variant Button
 
-After determining intent, end your message with a suggestion:
-→ Suggested: [your recommendation]`
+After outputting the intent signal, continue asking any follow-up questions needed.
+Keep responses concise. End each message with: → Suggested: [your recommendation]`
 }
 
 export function buildGrillSystemPrompt(componentName: string, figmaData: string): string {
@@ -59,6 +62,22 @@ Replace the example with the actual resolved props.`
 export function extractSuggestion(message: string): string | null {
   const match = message.match(/→\s*Suggested:\s*(.+)$/m)
   return match ? match[1].trim() : null
+}
+
+export interface ExtractedIntent {
+  intent: 'new' | 'edit' | 'variant'
+  componentName: string
+}
+
+export function extractIntent(message: string): ExtractedIntent | null {
+  const match = message.match(/→\s*Intent:\s*(new-component|edit-component|add-variant)\s+(\w+)/m)
+  if (!match) return null
+  const intentMap: Record<string, 'new' | 'edit' | 'variant'> = {
+    'new-component': 'new',
+    'edit-component': 'edit',
+    'add-variant': 'variant',
+  }
+  return { intent: intentMap[match[1]], componentName: match[2] }
 }
 
 export function extractPropSurface(message: string): PropSurface | null {
