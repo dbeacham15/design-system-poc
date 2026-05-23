@@ -1,16 +1,16 @@
 'use client'
 import { createContext, useContext, useReducer, ReactNode } from 'react'
-import { createPipelineState, transition, PipelineState, PipelineAction } from './pipeline-state'
+import { createAppState, transition, AppState, AppAction } from './pipeline-state'
 
 interface PipelineContextValue {
-  state: PipelineState
-  dispatch: (action: PipelineAction) => void
+  state: AppState
+  dispatch: (action: AppAction) => void
 }
 
 const PipelineContext = createContext<PipelineContextValue | null>(null)
 
 export function PipelineProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(transition, undefined, createPipelineState)
+  const [state, dispatch] = useReducer(transition, undefined, createAppState)
   return <PipelineContext.Provider value={{ state, dispatch }}>{children}</PipelineContext.Provider>
 }
 
