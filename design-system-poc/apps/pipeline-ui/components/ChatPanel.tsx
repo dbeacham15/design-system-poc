@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { usePipeline } from '@/lib/pipeline-context'
-import { extractPropSurface, extractSuggestion, buildGrillSystemPrompt, buildLandingSystemPrompt, extractIntent } from '@/lib/grill-prompt'
+import { extractPropSurface, extractSuggestion, buildGrillSystemPrompt, buildLandingSystemPrompt, buildEditSystemPrompt, extractIntent } from '@/lib/grill-prompt'
 import { StreamingMarkdown } from './StreamingMarkdown'
 import { PropSurfaceCard } from './PropSurfaceCard'
 import { GitHubPRCard } from './GitHubPRCard'
@@ -53,8 +53,9 @@ export function ChatPanel() {
 
   const getSystemPrompt = useCallback(() => {
     if (state.stage === 'idle') return buildLandingSystemPrompt()
+    if (state.stage === 'playground') return buildEditSystemPrompt(state.componentName, state.propSurface)
     return buildGrillSystemPrompt(state.componentName, JSON.stringify(state.figmaDesign ?? {}))
-  }, [state.stage, state.componentName, state.figmaDesign])
+  }, [state.stage, state.componentName, state.figmaDesign, state.propSurface])
 
   const sendMessage = useCallback(async (userText: string, silent = false) => {
     const newMessages: ChatMessage[] = userText && !silent
@@ -138,13 +139,26 @@ export function ChatPanel() {
     }
   }, [state.messages, state.componentName, state.figmaDesign, dispatch, getSystemPrompt])
 
-  // Auto-trigger on mount (fires once)
+  // Reset triggered flag when stage changes so Claude re-greets in edit mode
   useEffect(() => {
+    triggeredRef.current = false
+  }, [state.stage])
+
+  // Auto-trigger when chat opens or stage changes (fires once per stage/open)
+  useEffect(() => {
+    if (!state.chatOpen) return
     if (triggeredRef.current) return
     triggeredRef.current = true
-    const trigger = state.stage === 'idle' ? LANDING_TRIGGER : GRILL_TRIGGER
+    let trigger: string
+    if (state.stage === 'idle') {
+      trigger = LANDING_TRIGGER
+    } else if (state.stage === 'playground') {
+      trigger = `Greet the designer briefly. You are now in edit mode for ${state.componentName}. Ask what they want to change.`
+    } else {
+      trigger = GRILL_TRIGGER
+    }
     sendMessage(trigger, true)
-  }, []) // intentionally empty — only fires once on mount
+  }, [state.chatOpen, state.stage]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

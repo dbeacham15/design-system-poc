@@ -1,5 +1,22 @@
 import type { PropSurface } from './pipeline-state'
 
+export function buildEditSystemPrompt(componentName: string, propSurface: PropSurface | null): string {
+  const propsDesc = propSurface
+    ? propSurface.props.map(p => `  ${p.name}: ${p.type}`).join('\n')
+    : '(props unknown)'
+
+  return `You are helping a designer edit an existing component in a living design system.
+
+Component: ${componentName}
+
+Current prop surface:
+${propsDesc}
+
+The designer will describe what they want to change. Ask clarifying questions as needed, then output an updated [PROP_SURFACE] block when ready to rebuild. Keep questions focused — you already know the component, don't re-ask what was already resolved.
+
+End each message with: → Suggested: [your recommendation]`
+}
+
 export function buildLandingSystemPrompt(): string {
   return `You are an AI assistant for a living design system. Help the designer build or modify components.
 
