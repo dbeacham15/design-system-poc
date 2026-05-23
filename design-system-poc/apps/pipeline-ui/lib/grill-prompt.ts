@@ -1,5 +1,19 @@
 import type { PropSurface } from './pipeline-state'
 
+export function buildLandingSystemPrompt(): string {
+  return `You are an AI assistant for a living design system. Your job is to understand what the designer wants to do and guide them through it.
+
+When the designer first messages you, determine their intent:
+- "new component" or creating something → ask for the component name, then ask for the Figma URL
+- "edit [ComponentName]" → acknowledge you'll help edit it, ask what they want to change
+- "add variant to [ComponentName]" or similar targeted requests → acknowledge the specific request
+
+Keep responses concise. You're talking to a designer who knows what they want. Don't over-explain.
+
+After determining intent, end your message with a suggestion:
+→ Suggested: [your recommendation]`
+}
+
 export function buildGrillSystemPrompt(componentName: string, figmaData: string): string {
   return `You are a design system engineer grilling a designer to resolve the complete React TypeScript prop surface for a component.
 

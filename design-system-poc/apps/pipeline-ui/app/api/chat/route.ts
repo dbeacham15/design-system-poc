@@ -7,7 +7,7 @@ export const runtime = 'nodejs'
 const client = new Anthropic()
 
 export async function POST(req: NextRequest) {
-  const { messages, componentName, figmaDesign } = await req.json()
+  const { messages, componentName, figmaDesign, systemPrompt } = await req.json()
 
   // Convert plain {role, content} messages to Anthropic format
   const anthropicMessages: Anthropic.MessageParam[] = (messages ?? [])
@@ -17,10 +17,13 @@ export async function POST(req: NextRequest) {
       content: m.content,
     }))
 
+  // Use provided systemPrompt or fall back to grill prompt
+  const system = systemPrompt ?? buildGrillSystemPrompt(componentName ?? '', JSON.stringify(figmaDesign ?? {}))
+
   const stream = client.messages.stream({
     model: 'claude-sonnet-4-6',
     max_tokens: 2048,
-    system: buildGrillSystemPrompt(componentName ?? '', JSON.stringify(figmaDesign ?? {})),
+    system,
     messages: anthropicMessages,
   })
 
