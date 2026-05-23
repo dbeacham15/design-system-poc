@@ -4,6 +4,7 @@ import { usePipeline } from '@/lib/pipeline-context'
 import { extractPropSurface, extractSuggestion, buildGrillSystemPrompt, buildLandingSystemPrompt, extractIntent } from '@/lib/grill-prompt'
 import { StreamingMarkdown } from './StreamingMarkdown'
 import { PropSurfaceCard } from './PropSurfaceCard'
+import { GitHubPRCard } from './GitHubPRCard'
 import type { ChatMessage } from '@/lib/pipeline-state'
 
 // Inject animation styles once
@@ -203,6 +204,10 @@ export function ChatPanel() {
         ))}
         {state.buildError && (
           <SystemBubble text={`Build failed: ${state.buildError}`} />
+        )}
+
+        {state.prUrl && (
+          <GitHubPRCard prUrl={state.prUrl} componentName={state.componentName} />
         )}
 
         {error && (
