@@ -4,10 +4,12 @@ export function parseFigmaFileKey(url: string): string | null {
 }
 
 export async function readFigmaNode(fileKey: string, nodeId: string, token: string): Promise<unknown> {
-  // If we have a specific node, use the nodes endpoint (depth=1 is cheaper than depth=3)
-  // Fall back to top-level file endpoint if no node specified
-  const url = nodeId && nodeId !== '0:1'
-    ? `https://api.figma.com/v1/files/${fileKey}/nodes?ids=${encodeURIComponent(nodeId)}&depth=1`
+  // Figma URLs use dashes (116-828) but the API requires colons (116:828)
+  const apiNodeId = nodeId.replace(/-/g, ':')
+
+  // Use file-level endpoint if no specific node; nodes endpoint otherwise
+  const url = apiNodeId && apiNodeId !== '0:1'
+    ? `https://api.figma.com/v1/files/${fileKey}/nodes?ids=${encodeURIComponent(apiNodeId)}&depth=1`
     : `https://api.figma.com/v1/files/${fileKey}?depth=1`
 
   const res = await fetch(url, { headers: { 'X-Figma-Token': token } })
