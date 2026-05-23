@@ -12,8 +12,8 @@ export async function POST(req: NextRequest) {
     model: anthropic('claude-sonnet-4-6'),
     system: buildGrillSystemPrompt(componentName, JSON.stringify(figmaDesign)),
     messages,
-    maxTokens: 2048,
+    maxOutputTokens: 2048,
   })
 
-  return result.toDataStreamResponse()
+  return result.toUIMessageStreamResponse()
 }
