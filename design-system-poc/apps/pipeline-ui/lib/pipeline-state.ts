@@ -119,7 +119,7 @@ export function transition(state: AppState, action: AppAction): AppState {
         selectedComponent: state.componentName,
       }
     case 'BUILD_FAIL':
-      return { ...state, stage: 'grilling', buildStatuses: [], buildError: action.error }
+      return { ...state, stage: 'grilling', buildStatuses: [], buildError: action.error, chatOpen: true }
     case 'PR_CREATED':
       return { ...state, prUrl: action.prUrl }
     case 'SELECT_COMPONENT':

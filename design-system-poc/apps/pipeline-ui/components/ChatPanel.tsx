@@ -57,6 +57,7 @@ export function ChatPanel() {
     return buildGrillSystemPrompt(state.componentName, JSON.stringify(state.figmaDesign ?? {}))
   }, [state.stage, state.componentName, state.figmaDesign, state.propSurface])
 
+  const sendMessageRef = useRef<(userText: string, silent?: boolean) => Promise<void>>(async () => {})
   const sendMessage = useCallback(async (userText: string, silent = false) => {
     const newMessages: ChatMessage[] = userText && !silent
       ? [...state.messages, { id: makeId(), role: 'user', content: userText }]
@@ -139,6 +140,8 @@ export function ChatPanel() {
     }
   }, [state.messages, state.componentName, state.figmaDesign, dispatch, getSystemPrompt])
 
+  useEffect(() => { sendMessageRef.current = sendMessage }, [sendMessage])
+
   // Reset triggered flag when stage changes so Claude re-greets in edit mode
   useEffect(() => {
     triggeredRef.current = false
@@ -157,8 +160,8 @@ export function ChatPanel() {
     } else {
       trigger = GRILL_TRIGGER
     }
-    sendMessage(trigger, true)
-  }, [state.chatOpen, state.stage]) // eslint-disable-line react-hooks/exhaustive-deps
+    sendMessageRef.current(trigger, true)
+  }, [state.chatOpen, state.stage, state.componentName])
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

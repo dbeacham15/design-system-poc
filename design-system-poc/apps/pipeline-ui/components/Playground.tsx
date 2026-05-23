@@ -185,19 +185,10 @@ export function Playground() {
           <span style={{ fontSize: 13, fontWeight: 600, color: '#888' }}>Building…</span>
         </div>
 
-        {/* Build status list */}
-        <div style={{ flex: 1, padding: 24, overflowY: 'auto' }}>
-          {state.buildStatuses.length === 0 ? (
-            <p style={{ color: '#555', fontSize: 13 }}>Starting build…</p>
-          ) : (
-            <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {state.buildStatuses.map((msg, i) => (
-                <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: '#ccc' }}>
-                  <span style={{ color: '#4ade80', fontSize: 11 }}>✓</span>
-                  {msg}
-                </li>
-              ))}
-            </ul>
+        {/* Simple loading message — build statuses appear in ChatPanel */}
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {!Component && (
+            <div style={{ color: '#666', fontSize: 14 }}>Building component…</div>
           )}
         </div>
       </div>

@@ -106,16 +106,12 @@ describe('transition', () => {
     expect(s.prUrl).toBe('https://github.com/pr/1')
   })
 
-  it('BUILD_FAIL returns to grilling stage and clears buildStatuses', () => {
-    const building = { ...createAppState(), stage: 'building' as const, buildStatuses: ['step1', 'step2'] }
+  it('BUILD_FAIL returns to grilling stage and sets chatOpen true', () => {
+    const building = { ...createAppState(), stage: 'building' as const, buildStatuses: ['step1'], chatOpen: false }
     const s = transition(building, { type: 'BUILD_FAIL', error: 'Tests failed' })
     expect(s.stage).toBe('grilling')
+    expect(s.chatOpen).toBe(true)
     expect(s.buildStatuses).toEqual([])
-  })
-
-  it('BUILD_FAIL stores the error message in buildError', () => {
-    const building = { ...createAppState(), stage: 'building' as const }
-    const s = transition(building, { type: 'BUILD_FAIL', error: 'Tests failed' })
     expect(s.buildError).toBe('Tests failed')
   })
 })

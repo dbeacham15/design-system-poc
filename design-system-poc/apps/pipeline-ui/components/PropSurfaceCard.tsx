@@ -4,7 +4,8 @@ import type { PropSurface } from '@/lib/pipeline-state'
 
 export function PropSurfaceCard({ surface }: { surface: PropSurface }) {
   const { state, dispatch } = usePipeline()
-  const alreadyBuilt = state.stage === 'building' || state.stage === 'playground'
+  const isBuilding = state.stage === 'building'
+  const isBuilt = state.stage === 'playground'
 
   function handleBuild() {
     dispatch({ type: 'BUILD_START' })
@@ -38,15 +39,15 @@ export function PropSurfaceCard({ surface }: { surface: PropSurface }) {
         <div style={{ padding: '12px 16px' }}>
           <button
             onClick={handleBuild}
-            disabled={alreadyBuilt}
+            disabled={isBuilding || isBuilt}
             style={{
               width: '100%', padding: '10px', borderRadius: 8, border: 'none',
-              background: alreadyBuilt ? '#1a1a1a' : '#0BCE83',
-              color: alreadyBuilt ? '#444' : '#000',
-              fontWeight: 700, fontSize: 14, cursor: alreadyBuilt ? 'default' : 'pointer',
+              background: isBuilding || isBuilt ? '#1a1a1a' : '#0BCE83',
+              color: isBuilding || isBuilt ? '#444' : '#000',
+              fontWeight: 700, fontSize: 14, cursor: isBuilding || isBuilt ? 'default' : 'pointer',
             }}
           >
-            {alreadyBuilt ? 'Building…' : 'Build Component'}
+            {isBuilding ? 'Building…' : isBuilt ? 'Built ✓' : 'Build Component'}
           </button>
         </div>
       </div>
