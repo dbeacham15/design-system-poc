@@ -2,8 +2,12 @@ import type { NextConfig } from "next";
 import path from "path";
 
 const nextConfig: NextConfig = {
+  transpilePackages: [],
+  experimental: {
+    externalDir: true,
+  },
   turbopack: {
-    root: path.resolve(__dirname),
+    root: path.resolve(__dirname, "../.."),
   },
 };
 

@@ -19,7 +19,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@ds/components/*": ["../../src/components/*"]
     }
   },
   "include": [
