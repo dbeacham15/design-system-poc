@@ -5,6 +5,7 @@ import fs from 'fs'
 import path from 'path'
 import { execSync } from 'child_process'
 import { componentDir, buildCodegenPrompt } from '@/lib/build'
+import { regenerateRegistry, readRegistryNames } from '@/lib/registry-writer'
 import type { PropSurface } from '@/lib/pipeline-state'
 
 export const runtime = 'nodejs'
@@ -67,6 +68,11 @@ export async function POST(req: NextRequest) {
   const commitSha = execSync('git rev-parse HEAD', { cwd: repoRoot }).toString().trim()
   const storySlug = propSurface.componentName.toLowerCase()
   const storyUrl = `http://localhost:6006/?path=/story/${storySlug}--primary`
+
+  const appRoot = process.cwd() // apps/pipeline-ui
+  const existingNames = readRegistryNames(appRoot)
+  const allNames = Array.from(new Set([...existingNames, propSurface.componentName]))
+  regenerateRegistry(allNames, appRoot)
 
   return NextResponse.json({ commitSha, preBuildSha, storyUrl })
 }
