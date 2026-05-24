@@ -40,16 +40,21 @@ export async function POST(req: NextRequest) {
         const { text } = await generateText({
           model: anthropic('claude-sonnet-4-6'),
           prompt: buildCodegenPrompt(propSurface),
-          maxOutputTokens: 4096,
+          maxOutputTokens: 8000,  // FIX: was 4096; increase budget to avoid truncated JSON
         })
 
         sse(controller, { status: 'Parsing generated code…' })
+        // FIX: strip markdown code fences Claude sometimes adds despite instructions
+        const cleanText = text
+          .replace(/^```(?:json|typescript|ts)?\s*\n?/, '')
+          .replace(/\n?```\s*$/, '')
+          .trim()
+
         let files: Record<string, string>
         try {
-          files = JSON.parse(text)
+          files = JSON.parse(cleanText)
         } catch {
-          sse(controller, { error: 'Code generation returned invalid JSON' })
-          controller.close()
+          sse(controller, { error: 'Claude returned invalid JSON. The model may have added unexpected text. Try building again.' })
           return
         }
 
@@ -57,7 +62,6 @@ export async function POST(req: NextRequest) {
         const missingKeys = requiredKeys.filter(k => typeof files[k] !== 'string' || !files[k])
         if (missingKeys.length > 0) {
           sse(controller, { error: `Code generation missing keys: ${missingKeys.join(', ')}` })
-          controller.close()
           return
         }
 
@@ -73,8 +77,8 @@ export async function POST(req: NextRequest) {
           execSync('npm test', { cwd: repoRoot, stdio: 'pipe' })
         } catch (err) {
           fs.rmSync(dir, { recursive: true, force: true })
-          sse(controller, { error: `Tests failed: ${String(err)}` })
-          controller.close()
+          const msg = err instanceof Error ? err.message : String(err)
+          sse(controller, { error: `Tests failed: ${msg.slice(0, 400)}` })
           return
         }
 
