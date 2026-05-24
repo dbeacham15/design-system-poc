@@ -16,13 +16,13 @@ function renderPage() {
 }
 
 describe('Landing layout', () => {
-  it('renders the component browser left rail', () => {
+  it('renders the component sidebar toggle button', () => {
     renderPage()
-    expect(screen.getByText(/components/i)).toBeInTheDocument()
+    expect(screen.getByTitle('Components')).toBeInTheDocument()
   })
 
-  it('shows empty state when no components exist', () => {
+  it('renders the landing headline', () => {
     renderPage()
-    expect(screen.getByText(/none built yet/i)).toBeInTheDocument()
+    expect(screen.getByText(/what do you want to build today/i)).toBeInTheDocument()
   })
 })
