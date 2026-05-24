@@ -1,16 +1,33 @@
 import { describe, it, expect } from 'vitest'
-import { buildGrillSystemPrompt, extractPropSurface } from './grill-prompt'
+import { buildGrillSystemPrompt, buildEditSystemPrompt, extractPropSurface, extractSuggestion } from './grill-prompt'
 
 describe('buildGrillSystemPrompt', () => {
-  it('includes component name in prompt', () => {
+  it('includes component name when known', () => {
     const prompt = buildGrillSystemPrompt('Button', '{}')
     expect(prompt).toContain('Button')
   })
 
-  it('includes figma data in prompt', () => {
+  it('handles empty component name (pre-establishment phase)', () => {
+    const prompt = buildGrillSystemPrompt('', '{}')
+    expect(prompt).toContain('establish')
+  })
+
+  it('includes figma data when provided', () => {
     const figmaData = JSON.stringify({ nodes: [{ name: 'Primary' }] })
     const prompt = buildGrillSystemPrompt('Button', figmaData)
     expect(prompt).toContain('Primary')
+  })
+
+  it('includes [PROP_SURFACE] output instruction', () => {
+    const prompt = buildGrillSystemPrompt('Button', '{}')
+    expect(prompt).toContain('[PROP_SURFACE]')
+  })
+})
+
+describe('buildEditSystemPrompt', () => {
+  it('includes component name', () => {
+    const prompt = buildEditSystemPrompt('Button', null)
+    expect(prompt).toContain('Button')
   })
 })
 
@@ -25,5 +42,16 @@ describe('extractPropSurface', () => {
 
   it('returns null when no [PROP_SURFACE] block is present', () => {
     expect(extractPropSurface('No prop surface here')).toBeNull()
+  })
+})
+
+describe('extractSuggestion', () => {
+  it('extracts suggestion from message', () => {
+    const msg = 'What sizes?\n→ Suggested: "sm", "md", "lg"'
+    expect(extractSuggestion(msg)).toBe('"sm", "md", "lg"')
+  })
+
+  it('returns null when no suggestion', () => {
+    expect(extractSuggestion('No suggestion here')).toBeNull()
   })
 })
