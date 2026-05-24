@@ -75,6 +75,9 @@ export function ChatPanel() {
 
     // --- Figma URL handling ---
     if (isFigmaUrl(trimmed)) {
+      // Transition out of landing before fetch so the user sees their URL as a message
+      if (state.stage === 'idle') dispatch({ type: 'START_CHAT' })
+      dispatch({ type: 'ADD_MESSAGE', message: { id: makeId(), role: 'user', content: trimmed } })
       setStatus('fetching-figma')
       try {
         const nodeId = parseFigmaNodeId(trimmed)
@@ -100,8 +103,7 @@ export function ChatPanel() {
         if (data.imageUrl) {
           dispatch({ type: 'ADD_MESSAGE', message: { id: makeId(), role: 'system', content: `__figma_image__${data.imageUrl}` } })
         }
-        // After FIGMA_READY, Claude doesn't need a separate kick — the user can type or the
-        // system will respond once the user sends their next message. No auto-trigger.
+        // After FIGMA_READY the designer types their next message — no auto-trigger.
         setStatus('idle')
         return
       } catch (err) {
