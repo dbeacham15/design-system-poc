@@ -44,11 +44,10 @@ export async function POST(req: NextRequest) {
         })
 
         sse(controller, { status: 'Parsing generated code…' })
-        // FIX: strip markdown code fences Claude sometimes adds despite instructions
-        const cleanText = text
-          .replace(/^```(?:json|typescript|ts)?\s*\n?/, '')
-          .replace(/\n?```\s*$/, '')
-          .trim()
+        // Strip markdown code fences — Claude sometimes wraps JSON even when told not to.
+        // Also handles preamble text before the opening fence (e.g. "Here is the JSON:\n```json\n...")
+        const fenceMatch = text.match(/```(?:json|typescript|ts)?\s*\n([\s\S]*?)\n```/)
+        const cleanText = fenceMatch ? fenceMatch[1].trim() : text.trim()
 
         let files: Record<string, string>
         try {
@@ -61,7 +60,7 @@ export async function POST(req: NextRequest) {
         const requiredKeys = ['component', 'test', 'stories', 'index']
         const missingKeys = requiredKeys.filter(k => typeof files[k] !== 'string' || !files[k])
         if (missingKeys.length > 0) {
-          sse(controller, { error: `Code generation missing keys: ${missingKeys.join(', ')}` })
+          sse(controller, { error: `Code generation missing keys: ${missingKeys.join(', ')}. Try building again.` })
           return
         }
 
