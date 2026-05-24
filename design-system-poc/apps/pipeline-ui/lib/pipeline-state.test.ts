@@ -24,11 +24,9 @@ describe('transition', () => {
     expect(s.chatOpen).toBe(false)
   })
 
-  it('SET_INTENT transitions to grilling with intent and componentName', () => {
-    const s = transition(createAppState(), { type: 'SET_INTENT', intent: 'new', componentName: 'Button' })
+  it('START_CHAT transitions idle to grilling with chatOpen true', () => {
+    const s = transition(createAppState(), { type: 'START_CHAT' })
     expect(s.stage).toBe('grilling')
-    expect(s.intent).toBe('new')
-    expect(s.componentName).toBe('Button')
     expect(s.chatOpen).toBe(true)
   })
 

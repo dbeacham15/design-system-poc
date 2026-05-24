@@ -1,10 +1,8 @@
 export type AppStage =
-  | 'idle'       // landing — full-width chat, no component selected
-  | 'grilling'   // active grill conversation — full-width chat
+  | 'idle'       // landing — full-width chat in landing mode
+  | 'grilling'   // active grill conversation — full-width chat in thread mode
   | 'building'   // build in progress — chat + build progress in center
   | 'playground' // component built — left rail + playground center + chat drawer
-
-export type Intent = 'new' | 'edit' | 'variant' | null
 
 export interface FigmaDesign {
   nodes: unknown[]
@@ -31,10 +29,10 @@ export interface ChatMessage {
 export interface AppState {
   stage: AppStage
   chatOpen: boolean
-  intent: Intent
   componentName: string
   figmaUrl: string
   figmaDesign: FigmaDesign | null
+  figmaImageUrl: string | null
   messages: ChatMessage[]
   propSurface: PropSurface | null
   buildStatuses: string[]
@@ -42,14 +40,15 @@ export interface AppState {
   commitSha: string | null
   preBuildSha: string | null
   prUrl: string | null
-  selectedComponent: string | null // component viewed from left rail
+  selectedComponent: string | null
 }
 
 export type AppAction =
   | { type: 'OPEN_CHAT' }
   | { type: 'CLOSE_CHAT' }
-  | { type: 'SET_INTENT'; intent: Intent; componentName?: string }
-  | { type: 'FIGMA_READY'; figmaUrl: string; componentName: string; figmaDesign: FigmaDesign }
+  | { type: 'START_CHAT' }
+  | { type: 'SET_FIGMA'; figmaUrl: string; figmaImageUrl: string }
+  | { type: 'FIGMA_READY'; figmaUrl: string; componentName: string; figmaDesign: FigmaDesign; figmaImageUrl?: string }
   | { type: 'ADD_MESSAGE'; message: ChatMessage }
   | { type: 'PROP_SURFACE_READY'; propSurface: PropSurface }
   | { type: 'BUILD_START' }
@@ -58,16 +57,17 @@ export type AppAction =
   | { type: 'BUILD_FAIL'; error: string }
   | { type: 'PR_CREATED'; prUrl: string }
   | { type: 'SELECT_COMPONENT'; componentName: string; propSurface: PropSurface | null }
+  | { type: 'RESUME_SESSION'; state: AppState }
   | { type: 'RESET' }
 
 export function createAppState(): AppState {
   return {
     stage: 'idle',
     chatOpen: true,
-    intent: null,
     componentName: '',
     figmaUrl: '',
     figmaDesign: null,
+    figmaImageUrl: null,
     messages: [],
     propSurface: null,
     buildStatuses: [],
@@ -85,14 +85,10 @@ export function transition(state: AppState, action: AppAction): AppState {
       return { ...state, chatOpen: true }
     case 'CLOSE_CHAT':
       return { ...state, chatOpen: false }
-    case 'SET_INTENT':
-      return {
-        ...state,
-        stage: 'grilling',
-        chatOpen: true,
-        intent: action.intent,
-        componentName: action.componentName ?? state.componentName,
-      }
+    case 'START_CHAT':
+      return { ...state, stage: 'grilling', chatOpen: true }
+    case 'SET_FIGMA':
+      return { ...state, figmaUrl: action.figmaUrl, figmaImageUrl: action.figmaImageUrl }
     case 'FIGMA_READY':
       return {
         ...state,
@@ -100,6 +96,7 @@ export function transition(state: AppState, action: AppAction): AppState {
         figmaUrl: action.figmaUrl,
         componentName: action.componentName,
         figmaDesign: action.figmaDesign,
+        figmaImageUrl: action.figmaImageUrl ?? state.figmaImageUrl,
       }
     case 'ADD_MESSAGE':
       return { ...state, messages: [...state.messages, action.message] }
@@ -131,6 +128,8 @@ export function transition(state: AppState, action: AppAction): AppState {
         propSurface: action.propSurface,
         chatOpen: false,
       }
+    case 'RESUME_SESSION':
+      return { ...action.state }
     case 'RESET':
       return createAppState()
     default:
