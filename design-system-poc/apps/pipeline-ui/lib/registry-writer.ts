@@ -1,0 +1,30 @@
+import fs from 'fs'
+import path from 'path'
+
+export function regenerateRegistry(componentNames: string[], appRoot: string): void {
+  const lines = [
+    "import type React from 'react'",
+    '',
+    'export const componentRegistry: Record<string, () => Promise<{ default: React.ComponentType<Record<string, unknown>> }>> = {',
+  ]
+
+  for (const name of componentNames) {
+    lines.push(
+      `  ${name}: () => import('@ds/components/${name}').then(m => ({ default: m.${name} as unknown as React.ComponentType<Record<string, unknown>> })),`
+    )
+  }
+
+  lines.push('}')
+  lines.push('')
+
+  const outPath = path.join(appRoot, 'lib', 'component-registry.generated.ts')
+  fs.writeFileSync(outPath, lines.join('\n'))
+}
+
+export function readRegistryNames(appRoot: string): string[] {
+  const filePath = path.join(appRoot, 'lib', 'component-registry.generated.ts')
+  if (!fs.existsSync(filePath)) return []
+  const content = fs.readFileSync(filePath, 'utf-8')
+  const matches = content.matchAll(/^  (\w+): /gm)
+  return Array.from(matches, m => m[1])
+}
