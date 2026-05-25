@@ -1,0 +1,47 @@
+{
+  "componentName": "Alert",
+  "props": [
+    {
+      "name": "variant",
+      "type": "\"info\" | \"success\" | \"warning\" | \"error\"",
+      "required": false,
+      "defaultValue": "info"
+    },
+    {
+      "name": "size",
+      "type": "\"sm\" | \"md\" | \"lg\"",
+      "required": false,
+      "defaultValue": "md"
+    },
+    {
+      "name": "title",
+      "type": "string",
+      "required": false,
+      "defaultValue": null
+    },
+    {
+      "name": "children",
+      "type": "React.ReactNode",
+      "required": true,
+      "defaultValue": null
+    },
+    {
+      "name": "icon",
+      "type": "React.ReactNode",
+      "required": false,
+      "defaultValue": null
+    },
+    {
+      "name": "onClose",
+      "type": "() => void",
+      "required": false,
+      "defaultValue": null
+    },
+    {
+      "name": "fullWidth",
+      "type": "boolean",
+      "required": false,
+      "defaultValue": null
+    }
+  ]
+}
