@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "tokens:generate": "node scripts/generate-tokens.js"
   },
   "dependencies": {
     "react": "^19.2.6",
