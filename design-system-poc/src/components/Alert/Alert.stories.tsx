@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import React from 'react';
 import { Alert } from './Alert';
 
 const meta: Meta<typeof Alert> = {
@@ -15,113 +16,111 @@ const meta: Meta<typeof Alert> = {
       options: ['sm', 'md', 'lg'],
     },
     title: { control: 'text' },
+    byline: { control: 'text' },
     fullWidth: { control: 'boolean' },
+    onClose: { action: 'closed' },
   },
 };
 
 export default meta;
 type Story = StoryObj<typeof Alert>;
 
-export const Info: Story = {
+export const Default: Story = {
   args: {
     variant: 'info',
     size: 'md',
-    title: 'Information',
-    children: 'This is an informational alert message.',
+    title: 'Alert',
+    byline: 'This is a secondary line of supporting text.',
+  },
+};
+
+export const Info: Story = {
+  args: {
+    variant: 'info',
+    title: 'Info Alert',
+    byline: 'This is an informational message.',
   },
 };
 
 export const Success: Story = {
   args: {
     variant: 'success',
-    size: 'md',
-    title: 'Success',
-    children: 'Your operation completed successfully.',
+    title: 'Success!',
+    byline: 'Your action was completed successfully.',
   },
 };
 
 export const Warning: Story = {
   args: {
     variant: 'warning',
-    size: 'md',
     title: 'Warning',
-    children: 'Please review this warning before proceeding.',
+    byline: 'Please review before proceeding.',
   },
 };
 
 export const Error: Story = {
   args: {
     variant: 'error',
-    size: 'md',
     title: 'Error',
-    children: 'An error occurred. Please try again later.',
+    byline: 'Something went wrong. Please try again.',
   },
 };
 
-export const SmallSize: Story = {
+export const Small: Story = {
   args: {
-    variant: 'info',
     size: 'sm',
     title: 'Small Alert',
-    children: 'This is a small alert.',
+    byline: 'A compact alert message.',
   },
 };
 
-export const LargeSize: Story = {
+export const Large: Story = {
   args: {
-    variant: 'info',
     size: 'lg',
     title: 'Large Alert',
-    children: 'This is a large alert.',
-  },
-};
-
-export const WithIcon: Story = {
-  args: {
-    variant: 'info',
-    size: 'md',
-    title: 'Alert with Icon',
-    icon: '🔔',
-    children: 'This alert includes an icon.',
+    byline: 'A spacious alert message for emphasis.',
   },
 };
 
 export const WithCloseButton: Story = {
   args: {
-    variant: 'warning',
-    size: 'md',
-    title: 'Closable Alert',
-    children: 'Click the X button to dismiss this alert.',
-    onClose: () => alert('Alert closed!'),
+    title: 'Dismissable Alert',
+    byline: 'Click the X to close this alert.',
+    onClose: () => alert('Closed!'),
   },
 };
 
-export const NoTitle: Story = {
+export const WithIcon: Story = {
   args: {
-    variant: 'info',
-    size: 'md',
-    children: 'This alert has no title, just the body content.',
+    variant: 'success',
+    title: 'With Icon',
+    byline: 'This alert has a custom icon.',
+    icon: <span style={{ fontSize: '18px' }}>✓</span>,
   },
 };
 
 export const FullWidth: Story = {
   args: {
-    variant: 'success',
-    size: 'md',
-    title: 'Full Width Alert',
     fullWidth: true,
-    children: 'This alert spans the full width of its container.',
+    title: 'Full Width Alert',
+    byline: 'This alert spans the full width of its container.',
   },
 };
 
-export const AllFeatures: Story = {
+export const NoByline: Story = {
   args: {
-    variant: 'error',
-    size: 'lg',
-    title: 'All Features Enabled',
-    icon: '🚨',
-    fullWidth: true,
-    onClose: () => alert('Closed!'),
-    children: 'This alert has all features enabled: icon, title, close button, and full width.',
+    title: 'Alert Title Only',
+    byline: '',
   },
+};
+
+export const AllVariants: Story = {
+  render: () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <Alert variant="info" title="Info" byline="Informational message." />
+      <Alert variant="success" title="Success" byline="Operation completed." />
+      <Alert variant="warning" title="Warning" byline="Check before proceeding." />
+      <Alert variant="error" title="Error" byline="Something went wrong." />
+    </div>
+  ),
 };

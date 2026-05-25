@@ -1,19 +1,16 @@
 import React from 'react';
 
-export type AlertVariant = 'info' | 'success' | 'warning' | 'error';
-export type AlertSize = 'sm' | 'md' | 'lg';
-
 export interface AlertProps {
-  variant?: AlertVariant;
-  size?: AlertSize;
+  variant?: 'info' | 'success' | 'warning' | 'error';
+  size?: 'sm' | 'md' | 'lg';
   title?: string;
-  children: React.ReactNode;
+  byline?: string;
   icon?: React.ReactNode;
   onClose?: () => void;
   fullWidth?: boolean;
 }
 
-const variantStyles: Record<AlertVariant, React.CSSProperties> = {
+const variantStyles: Record<NonNullable<AlertProps['variant']>, React.CSSProperties> = {
   info: {
     backgroundColor: '#e0f2fe',
     borderColor: '#38bdf8',
@@ -36,23 +33,26 @@ const variantStyles: Record<AlertVariant, React.CSSProperties> = {
   },
 };
 
-const sizeStyles: Record<AlertSize, React.CSSProperties> = {
-  sm: { padding: '8px 12px', fontSize: '13px', borderRadius: '4px' },
-  md: { padding: '12px 16px', fontSize: '15px', borderRadius: '6px' },
-  lg: { padding: '16px 20px', fontSize: '17px', borderRadius: '8px' },
-};
-
-const titleSizeStyles: Record<AlertSize, React.CSSProperties> = {
-  sm: { fontSize: '14px', marginBottom: '2px' },
-  md: { fontSize: '16px', marginBottom: '4px' },
-  lg: { fontSize: '18px', marginBottom: '6px' },
+const sizeStyles: Record<NonNullable<AlertProps['size']>, React.CSSProperties> = {
+  sm: {
+    padding: '8px 12px',
+    fontSize: '13px',
+  },
+  md: {
+    padding: '12px 16px',
+    fontSize: '15px',
+  },
+  lg: {
+    padding: '16px 20px',
+    fontSize: '17px',
+  },
 };
 
 export function Alert({
   variant = 'info',
   size = 'md',
-  title,
-  children,
+  title = 'Alert',
+  byline = 'This is a secondary line of supporting text.',
   icon,
   onClose,
   fullWidth = false,
@@ -62,43 +62,47 @@ export function Alert({
     alignItems: 'flex-start',
     gap: '10px',
     border: '1px solid',
+    borderRadius: '6px',
     width: fullWidth ? '100%' : 'fit-content',
     boxSizing: 'border-box',
+    position: 'relative',
     ...variantStyles[variant],
     ...sizeStyles[size],
   };
 
-  const contentStyle: React.CSSProperties = {
-    flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
+  const titleStyle: React.CSSProperties = {
+    fontWeight: 600,
+    marginBottom: byline ? '4px' : '0',
   };
 
-  const titleStyle: React.CSSProperties = {
-    fontWeight: 700,
+  const bylineStyle: React.CSSProperties = {
     margin: 0,
-    ...titleSizeStyles[size],
+    opacity: 0.85,
+    fontSize: '0.9em',
   };
 
   const closeButtonStyle: React.CSSProperties = {
     background: 'none',
     border: 'none',
     cursor: 'pointer',
-    padding: '0',
     color: 'inherit',
-    fontSize: '18px',
+    fontSize: '16px',
     lineHeight: 1,
+    padding: '0 0 0 8px',
+    marginLeft: 'auto',
+    alignSelf: 'flex-start',
+    opacity: 0.7,
+  };
+
+  const iconWrapperStyle: React.CSSProperties = {
+    flexShrink: 0,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    opacity: 0.7,
-    flexShrink: 0,
   };
 
-  const iconStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    flexShrink: 0,
+  const contentStyle: React.CSSProperties = {
+    flex: 1,
   };
 
   return (
@@ -109,17 +113,19 @@ export function Alert({
       style={containerStyle}
     >
       {icon && (
-        <span style={iconStyle} aria-hidden="true" data-testid="alert-icon">
+        <span style={iconWrapperStyle} aria-hidden="true" data-testid="alert-icon">
           {icon}
         </span>
       )}
       <div style={contentStyle}>
-        {title && (
-          <p style={titleStyle} data-testid="alert-title">
-            {title}
+        <div style={titleStyle} data-testid="alert-title">
+          {title}
+        </div>
+        {byline && (
+          <p style={bylineStyle} data-testid="alert-byline">
+            {byline}
           </p>
         )}
-        <div data-testid="alert-body">{children}</div>
       </div>
       {onClose && (
         <button
