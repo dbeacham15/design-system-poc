@@ -17,13 +17,13 @@
       "name": "title",
       "type": "string",
       "required": false,
-      "defaultValue": null
+      "defaultValue": "Alert"
     },
     {
-      "name": "children",
-      "type": "React.ReactNode",
-      "required": true,
-      "defaultValue": null
+      "name": "byline",
+      "type": "string",
+      "required": false,
+      "defaultValue": "This is a secondary line of supporting text."
     },
     {
       "name": "icon",
