@@ -43,10 +43,16 @@ export function componentDir(componentName: string, repoRoot: string): string {
   return path.join(repoRoot, 'src', 'components', componentName)
 }
 
-export function buildCodegenPrompt(surface: PropSurface): string {
+export function buildCodegenPrompt(surface: PropSurface, tokenVocabulary?: string): string {
   const propLines = surface.props
     .map(p => `  ${p.name}${p.required ? '' : '?'}: ${p.type}${p.defaultValue ? ` // default: ${p.defaultValue}` : ''}`)
     .join('\n')
+
+  const tokenSection = tokenVocabulary ? `\n${tokenVocabulary}\n` : ''
+
+  const styleRule = tokenVocabulary
+    ? '- Use inline React styles (no CSS modules, no Tailwind, no external CSS). Reference ONLY the design tokens listed above — never hardcode color, spacing, font-size, or radius values'
+    : '- Use inline React styles (no CSS modules, no Tailwind, no external CSS)'
 
   return `Generate a React TypeScript component. Return ONLY a valid JSON object — no markdown, no explanation, no code fences.
 
@@ -54,9 +60,9 @@ Component: ${surface.componentName}
 
 Props:
 ${propLines}
-
+${tokenSection}
 Component requirements:
-- Use inline React styles (no CSS modules, no Tailwind, no external CSS)
+- ${styleRule}
 - Named export: export function ${surface.componentName}(...)
 - If a loading prop exists: show a CSS spinner, hide children while loading
 - If a disabled prop exists: apply 50% opacity, block pointer events

@@ -36,6 +36,20 @@ describe('buildCodegenPrompt', () => {
     const prompt = buildCodegenPrompt(surface)
     expect(prompt).toContain('"defaultConfig"')
   })
+
+  it('includes token vocabulary in the prompt when provided', () => {
+    const surface = { componentName: 'Button', props: [] }
+    const vocab = '--color-interactive — Primary action\n--space-md — Standard padding'
+    const prompt = buildCodegenPrompt(surface, vocab)
+    expect(prompt).toContain('--color-interactive')
+    expect(prompt).toContain('never hardcode')
+  })
+
+  it('works without token vocabulary — backward compatible', () => {
+    const surface = { componentName: 'Button', props: [] }
+    expect(() => buildCodegenPrompt(surface)).not.toThrow()
+    expect(buildCodegenPrompt(surface)).toContain('Button')
+  })
 })
 
 describe('buildIndexContent', () => {
