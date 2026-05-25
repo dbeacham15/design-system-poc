@@ -1,0 +1,80 @@
+{
+  "componentName": "Button",
+  "props": [
+    {
+      "name": "variant",
+      "type": "\"primary\" | \"secondary\" | \"ghost\" | \"destructive\"",
+      "required": false,
+      "defaultValue": "primary"
+    },
+    {
+      "name": "size",
+      "type": "\"sm\" | \"md\" | \"lg\"",
+      "required": false,
+      "defaultValue": "md"
+    },
+    {
+      "name": "disabled",
+      "type": "boolean",
+      "required": false,
+      "defaultValue": null
+    },
+    {
+      "name": "loading",
+      "type": "boolean",
+      "required": false,
+      "defaultValue": null
+    },
+    {
+      "name": "leftIcon",
+      "type": "React.ReactNode",
+      "required": false,
+      "defaultValue": null
+    },
+    {
+      "name": "rightIcon",
+      "type": "React.ReactNode",
+      "required": false,
+      "defaultValue": null
+    },
+    {
+      "name": "iconOnly",
+      "type": "React.ReactNode",
+      "required": false,
+      "defaultValue": null
+    },
+    {
+      "name": "onClick",
+      "type": "() => void",
+      "required": false,
+      "defaultValue": null
+    },
+    {
+      "name": "type",
+      "type": "\"button\" | \"submit\" | \"reset\"",
+      "required": false,
+      "defaultValue": "button"
+    },
+    {
+      "name": "fullWidth",
+      "type": "boolean",
+      "required": false,
+      "defaultValue": null
+    },
+    {
+      "name": "children",
+      "type": "React.ReactNode",
+      "required": false,
+      "defaultValue": null
+    }
+  ],
+  "defaultConfig": {
+    "variant": "primary",
+    "size": "md",
+    "children": "Get Started",
+    "disabled": false,
+    "loading": false,
+    "fullWidth": false,
+    "type": "button"
+  }
+}
