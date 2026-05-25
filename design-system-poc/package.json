@@ -8,8 +8,9 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest run && npm test --prefix apps/pipeline-ui",
+    "test": "vitest run",
     "test:watch": "vitest",
+    "test:all": "vitest run && npm test --prefix apps/pipeline-ui",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "tokens:generate": "node scripts/generate-tokens.js"
