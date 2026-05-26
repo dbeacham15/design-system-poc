@@ -1,0 +1,59 @@
+{
+  "componentName": "ToggleSwitch",
+  "props": [
+    {
+      "name": "checked",
+      "type": "boolean",
+      "required": true,
+      "defaultValue": null
+    },
+    {
+      "name": "onChange",
+      "type": "(checked: boolean) => void",
+      "required": true,
+      "defaultValue": null
+    },
+    {
+      "name": "size",
+      "type": "\"sm\" | \"md\" | \"lg\"",
+      "required": false,
+      "defaultValue": "md"
+    },
+    {
+      "name": "variant",
+      "type": "\"primary\" | \"success\" | \"danger\"",
+      "required": false,
+      "defaultValue": "primary"
+    },
+    {
+      "name": "label",
+      "type": "string",
+      "required": false,
+      "defaultValue": null
+    },
+    {
+      "name": "labelPosition",
+      "type": "\"left\" | \"right\"",
+      "required": false,
+      "defaultValue": "right"
+    },
+    {
+      "name": "disabled",
+      "type": "boolean",
+      "required": false,
+      "defaultValue": null
+    },
+    {
+      "name": "loading",
+      "type": "boolean",
+      "required": false,
+      "defaultValue": null
+    },
+    {
+      "name": "fullWidth",
+      "type": "boolean",
+      "required": false,
+      "defaultValue": null
+    }
+  ]
+}
