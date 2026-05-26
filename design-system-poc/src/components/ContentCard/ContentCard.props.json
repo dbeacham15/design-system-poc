@@ -1,0 +1,89 @@
+{
+  "componentName": "ContentCard",
+  "props": [
+    {
+      "name": "variant",
+      "type": "\"default\" | \"outlined\" | \"elevated\"",
+      "required": false,
+      "defaultValue": "default"
+    },
+    {
+      "name": "size",
+      "type": "\"sm\" | \"md\" | \"lg\"",
+      "required": false,
+      "defaultValue": "md"
+    },
+    {
+      "name": "title",
+      "type": "string",
+      "required": true,
+      "defaultValue": null
+    },
+    {
+      "name": "description",
+      "type": "string",
+      "required": false,
+      "defaultValue": null
+    },
+    {
+      "name": "imageSrc",
+      "type": "string",
+      "required": false,
+      "defaultValue": null
+    },
+    {
+      "name": "imageAlt",
+      "type": "string",
+      "required": false,
+      "defaultValue": null
+    },
+    {
+      "name": "badge",
+      "type": "string",
+      "required": false,
+      "defaultValue": null
+    },
+    {
+      "name": "icon",
+      "type": "React.ReactNode",
+      "required": false,
+      "defaultValue": null
+    },
+    {
+      "name": "footer",
+      "type": "React.ReactNode",
+      "required": false,
+      "defaultValue": null
+    },
+    {
+      "name": "onClick",
+      "type": "() => void",
+      "required": false,
+      "defaultValue": null
+    },
+    {
+      "name": "href",
+      "type": "string",
+      "required": false,
+      "defaultValue": null
+    },
+    {
+      "name": "disabled",
+      "type": "boolean",
+      "required": false,
+      "defaultValue": null
+    },
+    {
+      "name": "loading",
+      "type": "boolean",
+      "required": false,
+      "defaultValue": null
+    },
+    {
+      "name": "fullWidth",
+      "type": "boolean",
+      "required": false,
+      "defaultValue": null
+    }
+  ]
+}
