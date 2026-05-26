@@ -1,0 +1,53 @@
+{
+  "componentName": "Table",
+  "props": [
+    {
+      "name": "variant",
+      "type": "\"default\" | \"striped\" | \"bordered\"",
+      "required": false,
+      "defaultValue": "default"
+    },
+    {
+      "name": "size",
+      "type": "\"sm\" | \"md\" | \"lg\"",
+      "required": false,
+      "defaultValue": "md"
+    },
+    {
+      "name": "loading",
+      "type": "boolean",
+      "required": false,
+      "defaultValue": null
+    },
+    {
+      "name": "sortable",
+      "type": "boolean",
+      "required": false,
+      "defaultValue": null
+    },
+    {
+      "name": "selectable",
+      "type": "boolean",
+      "required": false,
+      "defaultValue": null
+    },
+    {
+      "name": "fullWidth",
+      "type": "boolean",
+      "required": false,
+      "defaultValue": null
+    },
+    {
+      "name": "stickyHeader",
+      "type": "boolean",
+      "required": false,
+      "defaultValue": null
+    },
+    {
+      "name": "pagination",
+      "type": "boolean",
+      "required": false,
+      "defaultValue": null
+    }
+  ]
+}
